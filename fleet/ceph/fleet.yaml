@@ -47,6 +47,8 @@ helm:
           replicated:
             size: 3
           deviceClass: ssd
+        storageClass:
+          enabled: false
       - name: ec-data-pool
         spec:
           failureDomain: osd

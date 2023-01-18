@@ -1,0 +1,70 @@
+defaultNamespace: rook-ceph
+
+dependsOn:
+  - name: aldaas-fleet-rook
+
+helm:
+  repo: https://charts.rook.io/release
+  chart: rook-ceph-cluster
+  values:
+    cephClusterSpec:
+      dashboard:
+        ssl: false
+      mon:
+        count: 3
+        allowMultiplePerNode: false
+        volumeClaimTemplate:
+          spec:
+            storageClassName: global.fleet.clusterLabels.ceph-storage
+            resources:
+              requests:
+                storage: 10Gi  
+      storage:
+        useAllNodes: true
+        useAllDevices: true
+        storageClassDeviceSets:
+        - name: osd-pool
+          count: 3
+          portable: true
+          encrypted: false
+          volumeClaimTemplates:
+          - metadata:
+              name: data
+            spec:
+              resources:
+                requests:
+                  storage: 300Gi
+              storageClassName: global.fleet.clusterLabels.ceph-storage
+              volumeMode: Block
+              accessModes:
+                - ReadWriteOnce
+        onlyApplyOSDPlacement: false
+    cephBlockPools:
+      - name: ceph-blockpool
+        spec:
+          failureDomain: osd
+          erasureCoded:
+            dataChunks: 2
+            codingChunks: 1
+          deviceClass: ssd
+        storageClass:
+          enabled: true
+          name: ceph-block
+          isDefault: false
+          reclaimPolicy: Delete
+          allowVolumeExpansion: true
+          parameters:
+            imageFeatures: layering
+            csi.storage.k8s.io/provisioner-secret-name: rook-csi-rbd-provisioner
+            csi.storage.k8s.io/provisioner-secret-namespace: "{{ .Release.Namespace }}"
+            csi.storage.k8s.io/controller-expand-secret-name: rook-csi-rbd-provisioner
+            csi.storage.k8s.io/controller-expand-secret-namespace: "{{ .Release.Namespace }}"
+            csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
+            csi.storage.k8s.io/node-stage-secret-namespace: "{{ .Release.Namespace }}"
+            csi.storage.k8s.io/fstype: ext4
+    cephBlockPoolsVolumeSnapshotClass:
+      enabled: true
+    cephFileSystems: []
+    cephFileSystemVolumeSnapshotClass:
+      enabled: false
+    cephObjectStores: []

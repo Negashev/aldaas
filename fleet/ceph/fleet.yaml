@@ -2,6 +2,7 @@ defaultNamespace: rook-ceph
 
 dependsOn:
   - name: aldaas-fleet-rook
+  - name: aldaas-fleet-external-snapshotter
 
 helm:
   repo: https://charts.rook.io/release

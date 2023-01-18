@@ -1,0 +1,13 @@
+defaultNamespace: rook-ceph
+
+helm:
+  repo: https://charts.rook.io/release
+  chart: rook-ceph
+  values:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi

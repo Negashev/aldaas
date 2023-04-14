@@ -1,4 +1,0 @@
-defaultNamespace: kube-system
-
-kustomize:
-  dir: overlays

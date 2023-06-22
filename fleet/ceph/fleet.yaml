@@ -23,7 +23,7 @@ helm:
         storageClassDeviceSets:
         - name: osd-pool
           count: 3
-          portable: true
+          portable: false
           encrypted: false
           volumeClaimTemplates:
           - metadata:
@@ -36,26 +36,26 @@ helm:
               volumeMode: Block
               accessModes:
                 - ReadWriteOnce
-          - metadata:
-              name: metadata
-            spec:
-              resources:
-                requests:
-                  storage: 5Gi
-              storageClassName: global.fleet.clusterLabels.ceph-storage
-              volumeMode: Block
-              accessModes:
-                - ReadWriteOnce
-          - metadata:
-              name: wal
-            spec:
-              resources:
-                requests:
-                  storage: 5Gi
-              storageClassName: global.fleet.clusterLabels.ceph-storage
-              volumeMode: Block
-              accessModes:
-                - ReadWriteOnce
+          # - metadata:
+          #     name: metadata
+          #   spec:
+          #     resources:
+          #       requests:
+          #         storage: 5Gi
+          #     storageClassName: global.fleet.clusterLabels.ceph-storage
+          #     volumeMode: Block
+          #     accessModes:
+          #       - ReadWriteOnce
+          # - metadata:
+          #     name: wal
+          #   spec:
+          #     resources:
+          #       requests:
+          #         storage: 5Gi
+          #     storageClassName: global.fleet.clusterLabels.ceph-storage
+          #     volumeMode: Block
+          #     accessModes:
+          #       - ReadWriteOnce
         onlyApplyOSDPlacement: false
     cephBlockPools:
       - name: replicated-metadata-pool

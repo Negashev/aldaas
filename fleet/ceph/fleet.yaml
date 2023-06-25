@@ -9,6 +9,7 @@ helm:
   values:
     cephClusterSpec:
       dataDirHostPath: /var/lib/rook
+      continueUpgradeAfterChecksEvenIfNotHealthy: true
       mgr:
         count: 1
         modules:

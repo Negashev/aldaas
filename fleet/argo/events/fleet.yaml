@@ -1,4 +1,4 @@
-defaultNamespace: rook-ceph
+defaultNamespace: argo-events
 
 helm:
   repo: https://argoproj.github.io/argo-helm

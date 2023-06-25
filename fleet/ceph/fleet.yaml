@@ -8,7 +8,15 @@ helm:
   chart: rook-ceph-cluster
   values:
     cephClusterSpec:
+      dataDirHostPath: /var/lib/rook
+      continueUpgradeAfterChecksEvenIfNotHealthy: true
+      mgr:
+        count: 1
+        modules:
+          - name: pg_autoscaler
+            enabled: true
       dashboard:
+        enabled: true
         ssl: false
       mon:
         count: 3

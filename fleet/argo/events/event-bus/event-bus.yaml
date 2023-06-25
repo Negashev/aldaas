@@ -9,15 +9,15 @@ spec:
       replicas: 3
       # Optional, authen strategy, "none" or "token", defaults to "none"
       auth: token
-     containerTemplate:
-       resources:
-         requests:
-           cpu: "10m"
-     metricsContainerTemplate:
-       resources:
-         requests:
-           cpu: "10m"
-     antiAffinity: true
-     persistence:
-       accessMode: ReadWriteOnce
-       volumeSize: 10Gi
+      containerTemplate:
+        resources:
+          requests:
+            cpu: "10m"
+      metricsContainerTemplate:
+        resources:
+          requests:
+            cpu: "10m"
+      antiAffinity: true
+      persistence:
+        accessMode: ReadWriteOnce
+        volumeSize: 10Gi

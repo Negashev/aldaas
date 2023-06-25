@@ -17,7 +17,6 @@ spec:
         resources:
           requests:
             cpu: "10m"
-      antiAffinity: true
       persistence:
         accessMode: ReadWriteOnce
         volumeSize: 10Gi

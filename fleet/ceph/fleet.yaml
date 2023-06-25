@@ -68,21 +68,6 @@ helm:
                       values:
                         - rook-ceph-osd
           preparePlacement:
-            podAntiAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 100
-                  podAffinityTerm:
-                    labelSelector:
-                      matchExpressions:
-                        - key: app
-                          operator: In
-                          values:
-                            - rook-ceph-osd
-                        - key: app
-                          operator: In
-                          values:
-                            - rook-ceph-osd-prepare
-                    topologyKey: kubernetes.io/hostname
             topologySpreadConstraints:
               - maxSkew: 1
                 # IMPORTANT: If you don't have zone labels, change this to another key such as kubernetes.io/hostname

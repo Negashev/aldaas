@@ -1,0 +1,38 @@
+defaultNamespace: argo-workflows
+
+helm:
+  repo: https://argoproj.github.io/argo-helm
+  chart: argo-workflows
+  values:
+    server:
+      nodeSelector:
+        node-role.kubernetes.io/master: "true"
+      tolerations:
+        - key: "node-role.kubernetes.io/control-plane"
+          operator: "Exists"
+        - key: "node-role.kubernetes.io/etcd"
+          operator: "Exists"
+    controller:
+      resources:
+        requests:
+          memory: "256Mi"
+          cpu: "250m"
+        limits:
+          memory: "256Mi"
+          cpu: "500m"
+      nodeSelector:
+        node-role.kubernetes.io/master: "true"
+      tolerations:
+        - key: "node-role.kubernetes.io/control-plane"
+          operator: "Exists"
+        - key: "node-role.kubernetes.io/etcd"
+          operator: "Exists"
+      extraEnv:
+        - name: ARGO_EXECUTOR_PLUGINS
+          value: 'true'
+      workflowDefaults:
+        spec:
+          serviceAccountName: argo-workflow
+    workflow:
+      serviceAccount:
+        create: true

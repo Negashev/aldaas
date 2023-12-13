@@ -1,0 +1,10 @@
+defaultNamespace: aldaas
+
+labels:
+  aldaas: core
+
+dependsOn:
+  - selector:
+      matchLabels:
+        argo: events
+        argo: workflows

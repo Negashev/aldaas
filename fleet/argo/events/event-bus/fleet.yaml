@@ -1,1 +1,9 @@
 defaultNamespace: argo-events
+
+labels:
+  argo: events-bus
+
+dependsOn:
+  - selector:
+      matchLabels:
+        argo: events

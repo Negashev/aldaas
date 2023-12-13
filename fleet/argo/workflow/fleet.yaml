@@ -1,5 +1,8 @@
 defaultNamespace: argo-workflows
 
+labels:
+  argo: events
+
 helm:
   repo: https://argoproj.github.io/argo-helm
   chart: argo-workflows

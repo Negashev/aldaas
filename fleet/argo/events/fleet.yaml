@@ -1,5 +1,8 @@
 defaultNamespace: argo-events
 
+labels:
+  argo: events
+
 helm:
   repo: https://argoproj.github.io/argo-helm
   chart: argo-events

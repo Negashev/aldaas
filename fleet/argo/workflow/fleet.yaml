@@ -39,6 +39,10 @@ helm:
       - aldaas
       - argo-events
       - argo-workflows
+      workflowDefaults:
+        spec:
+          serviceAccountName: argo-workflow
     workflow:
       serviceAccount:
         create: true
+        

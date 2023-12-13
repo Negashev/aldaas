@@ -27,12 +27,15 @@ helm:
           operator: "Exists"
         - key: "node-role.kubernetes.io/etcd"
           operator: "Exists"
-      extraEnv:
-        - name: ARGO_EXECUTOR_PLUGINS
-          value: 'true'
-      workflowDefaults:
-        spec:
-          serviceAccountName: argo-workflow
+      authMode: server
+      ingress:
+        enabled: true
+        hosts:
+        - argo.rd.localhost
+      workflowNamespaces:
+      - default
+      - argo-events
+      - argo-workflows
     workflow:
       serviceAccount:
         create: true

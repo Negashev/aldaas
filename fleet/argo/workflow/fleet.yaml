@@ -36,7 +36,7 @@ helm:
         - key: "node-role.kubernetes.io/etcd"
           operator: "Exists"
       workflowNamespaces:
-      - aldaas
+      - default
       - argo-events
       - argo-workflows
       workflowDefaults:

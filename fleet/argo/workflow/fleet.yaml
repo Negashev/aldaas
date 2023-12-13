@@ -8,6 +8,11 @@ helm:
   chart: argo-workflows
   values:
     server:
+      authMode: server
+      ingress:
+        enabled: true
+        hosts:
+        - argo.rd.localhost
       nodeSelector:
         node-role.kubernetes.io/master: "true"
       tolerations:
@@ -30,11 +35,6 @@ helm:
           operator: "Exists"
         - key: "node-role.kubernetes.io/etcd"
           operator: "Exists"
-      authMode: server
-      ingress:
-        enabled: true
-        hosts:
-        - argo.rd.localhost
       workflowNamespaces:
       - default
       - argo-events

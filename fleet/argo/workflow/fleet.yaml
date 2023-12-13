@@ -8,7 +8,6 @@ helm:
   chart: argo-workflows
   values:
     server:
-      authMode: server
       ingress:
         enabled: true
         hosts:

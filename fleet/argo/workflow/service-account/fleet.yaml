@@ -1,0 +1,4 @@
+defaultNamespace: argo-workflows
+
+labels:
+  argo: workflows

@@ -3,6 +3,11 @@ defaultNamespace: argo-workflows
 labels:
   argo: workflows
 
+dependsOn:
+  - selector:
+      matchLabels:
+        aldaas: namespace
+
 helm:
   repo: https://argoproj.github.io/argo-helm
   chart: argo-workflows
@@ -35,7 +40,7 @@ helm:
         - key: "node-role.kubernetes.io/etcd"
           operator: "Exists"
       workflowNamespaces:
-      - default
+      - aldaas
       - argo-events
       - argo-workflows
       workflowDefaults:

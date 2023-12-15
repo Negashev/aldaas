@@ -1,0 +1,5 @@
+apiVersion: v2
+name: aldaas
+description: Aldaas service
+version: 0.0.1
+appVersion: 0.0.0

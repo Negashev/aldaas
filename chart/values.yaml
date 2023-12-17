@@ -5,3 +5,8 @@ s3:
   existingSecret: ""
   accesskey: ""
   secretkey: ""
+  host: minio.server
+  port: 80
+  insecure: true
+  prefix: spilo/acid-database/shasum/logical_backups
+  suffix: .sql.gz

@@ -14,8 +14,8 @@ helm:
   values:
     s3:
       existingSecret: ${ .ClusterAnnotations.aldaasS3Creadentials }
-      # host: ${ .ClusterAnnotations.aldaasS3Host }
-      # port: ${ .ClusterAnnotations.aldaasS3Port }
-      # insecure: ${ .ClusterAnnotations.aldaasS3Insecure }
-      # prefix: ${ .ClusterAnnotations.aldaasS3Prefix }
-      # suffix: ${ .ClusterAnnotations.aldaasS3Suffix }
+      host: ${ .ClusterAnnotations.aldaasS3Host }
+      port: ${ .ClusterAnnotations.aldaasS3Port }
+      insecure: ${ .ClusterAnnotations.aldaasS3Insecure }
+      prefix: ${ .ClusterAnnotations.aldaasS3Prefix }
+      suffix: ${ .ClusterAnnotations.aldaasS3Suffix }

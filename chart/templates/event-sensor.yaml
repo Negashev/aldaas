@@ -21,11 +21,11 @@ spec:
             - dest: spec.arguments.parameters.0.value
               src:
                 dataKey: notification.0.s3.object.key
-                dependencyName: db-file
+                dependencyName: minio-dep
             - dest: spec.arguments.parameters.1.value
               src:
                 dataKey: notification.0.s3.object.size
-                dependencyName: db-size
+                dependencyName: minio-dep
           source:
             resource:
               apiVersion: argoproj.io/v1alpha1

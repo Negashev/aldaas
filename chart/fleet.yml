@@ -13,8 +13,8 @@ helm:
   chart: ./
   values:
     s3:
-      existingSecret: ${ .ClusterLabels.aldaasS3Creadentials }
-      host: ${ .ClusterLabels.aldaasS3Host }
-      insecure: ${ .ClusterLabels.aldaasS3Insecure }
-      prefix: ${ .ClusterLabels.aldaasS3Prefix }
-      suffix: ${ .ClusterLabels.aldaasS3Suffix }
+      # existingSecret: ${ .ClusterLabels.aldaasS3Creadentials }
+      # host: ${ .ClusterLabels.aldaasS3Host }
+      # insecure: ${ .ClusterLabels.aldaasS3Insecure }
+      # prefix: ${ .ClusterLabels.aldaasS3Prefix }
+      # suffix: ${ .ClusterLabels.aldaasS3Suffix }

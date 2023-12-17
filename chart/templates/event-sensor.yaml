@@ -48,7 +48,7 @@ spec:
                         arguments:
                           parameters:
                             - name: pvc-size
-                              value: '{{`{workflow.parameters.s3-bucket}}`}}'
+                              value: '{{`{{workflow.parameters.db-size}}`}}'
                     - - name: generate
                         template: whalesay
                         arguments:

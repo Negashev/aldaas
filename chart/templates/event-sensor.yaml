@@ -8,6 +8,8 @@ spec:
     - eventName: backup
       eventSourceName: minio-{{ template "aldaas.fullname" . }}
       name: minio-dep
+      transform:
+        jq: .notification[0].s3.object.size += 1073741824
   template:
     serviceAccountName: argo-workflow
   triggers:

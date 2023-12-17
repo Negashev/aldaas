@@ -17,5 +17,6 @@ helm:
       host: ${ .ClusterAnnotations.aldaasS3Host }
       port: ${ .ClusterAnnotations.aldaasS3Port }
       insecure: ${ .ClusterAnnotations.aldaasS3Insecure }
+      bucket: ${ .ClusterAnnotations.aldaasS3Bucket }
       prefix: ${ .ClusterAnnotations.aldaasS3Prefix }
       suffix: ${ .ClusterAnnotations.aldaasS3Suffix }

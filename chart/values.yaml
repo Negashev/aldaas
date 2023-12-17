@@ -1,1 +1,7 @@
 serviceAccountName: argo-workflow
+EventBus:
+  enabled: true
+s3:
+  existingSecret: ""
+  accesskey: ""
+  secretkey: ""

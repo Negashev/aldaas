@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: minio-{{ template "aldaas.fullname" . }}
+  namespace: aldaas
+spec:
+  minio:
+    backup:
+      bucket:
+        name: "{{ .Value.s3.bucket}}"
+      endpoint: "{{.Values.s3.host}}:{{.Values.s3.post}}"
+      events:
+        - s3:ObjectCreated:Put
+      insecure: {{.Values.s3.insecure}}
+      accessKey:
+        key: accesskey
+        name: {{ template "s3.credentials" . }} 
+      secretKey:
+        key: secretkey
+        name: {{ template "s3.credentials" . }} 
+      filter:
+        prefix: "{{.Values.s3.prefix}}"
+        suffix: "{{.Values.s3.suffix}}"

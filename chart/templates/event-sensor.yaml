@@ -1,0 +1,89 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: minio-{{ template "aldaas.fullname" . }}
+  namespace: aldaas
+spec:
+  dependencies:
+    - eventName: backup
+      eventSourceName: minio-{{ template "aldaas.fullname" . }}
+      name: minio-dep
+  template:
+    serviceAccountName: argo-workflow
+  triggers:
+    - retryStrategy:
+        steps: 3
+      template:
+        name: {{ template "aldaas.fullname" . }}-workflow-trigger
+        k8s:
+          operation: create
+          parameters:
+            - dest: spec.arguments.parameters.0.value
+              src:
+                dataKey: notification.0.s3.object.key
+                dependencyName: db-file
+            - dest: spec.arguments.parameters.1.value
+              src:
+                dataKey: notification.0.s3.object.size
+                dependencyName: db-size
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: minio-{{ template "aldaas.fullname" . }}-workflow-
+              spec:
+                arguments:
+                  parameters:
+                    - name: db-file
+                      value: THIS_WILL_BE_REPLACED
+                    - name: db-size
+                      value: THIS_WILL_BE_REPLACED
+                entrypoint: init
+                templates:
+                  - name: init
+                    steps:
+                    - - name: generate-volume
+                        template: generate-volume
+                        arguments:
+                          parameters:
+                            - name: pvc-size
+                              value: '{{`{workflow.parameters.s3-bucket}}`}}'
+                    - - name: generate
+                        template: whalesay
+                        arguments:
+                          parameters:
+                            - name: pvc-name
+                              value: '{{`{{steps.generate-volume.outputs.parameters.pvc-name}}`}}'
+                  - container:
+                      args:
+                        - "{{`{{inputs.parameters.pvc-name}}`}}"
+                      command:
+                        - cowsay
+                      image: docker/whalesay:latest
+                    inputs:
+                      parameters:
+                        - name: pvc-name
+                    name: whalesay
+                  - name: generate-volume
+                    inputs:
+                      parameters:
+                        - name: pvc-size
+                    resource:
+                      action: create
+                      setOwnerReference: true
+                      manifest: |
+                        apiVersion: v1
+                        kind: PersistentVolumeClaim
+                        metadata:
+                          generateName: pvc-example-
+                        spec:
+                          accessModes: ['ReadWriteOnce']
+                          resources:
+                            requests:
+                              storage: '{{`{{inputs.parameters.pvc-size}}`}}'
+                    outputs:
+                      parameters:
+                        - name: pvc-name
+                          valueFrom:
+                            jsonPath: '{{`{.metadata.name}`}}'

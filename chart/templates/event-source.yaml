@@ -7,7 +7,7 @@ spec:
   minio:
     backup:
       bucket:
-        name: "{{ .Value.s3.bucket}}"
+        name: "{{ .Values.s3.bucket}}"
       endpoint: "{{.Values.s3.host}}:{{.Values.s3.post}}"
       events:
         - s3:ObjectCreated:Put

@@ -135,9 +135,6 @@ spec:
                       parameters:
                         - name: db-ip
                   - name: generate-volume
-                    inputs:
-                      parameters:
-                        - name: pvc-size
                     resource:
                       action: create
                       setOwnerReference: true

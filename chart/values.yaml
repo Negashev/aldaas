@@ -41,7 +41,7 @@ application:
       memory: 1Gi
 restore:
   args:
-   - gunzip -c `ls -1 /backup/*.sql.gz` | psql -h $ALDAAS_HOST_DAEMON -p 5432 -U $POSTGRES_USER -d $POSTGRES_DB
+   - gunzip -c /backup.sql.gz | psql -h $ALDAAS_HOST_DAEMON -p 5432 -U $POSTGRES_USER -d $POSTGRES_DB
   command:
    - sh
    - -c

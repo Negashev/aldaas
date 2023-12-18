@@ -53,14 +53,17 @@ spec:
                                 value: '{{`{{steps.db-for-prepare-aldaas.ip}}`}}'
                   - name: db-for-prepare-aldaas
                     daemon: true
-                    container:
+                    container:  
+                      volumeMounts:
+                      - name: workdir
+                        mountPath: {{ .Values.application.mount }}
                       {{- if  .Values.application.args }}
                       command:
                         {{- range .Values.application.args }}
                           - {{ . -}}
                         {{ end }}
                       {{- end }}
-                      {{- if  .Values.application.args }}
+                      {{- if  .Values.application.command }}
                       args:
                         {{- range .Values.application.command }}
                           - {{ . -}}
@@ -88,19 +91,16 @@ spec:
                       - name: workdir
                         persistentVolumeClaim:
                           claimName: '{{`{{inputs.parameters.pvc-name}}`}}'
-                    volumeMounts:
-                    - name: workdir
-                      mountPath: {{ .Values.application.mount }}
                   - name: load-backup
                     container:
-                      {{- if  .Values.restore.env }}
-                      command:
+                      {{- if  .Values.restore.args }}
+                      args:
                         {{- range .Values.restore.args }}
                           - {{ . -}}
                         {{ end }}
                       {{- end }}
                       {{- if  .Values.restore.command }}
-                      args:
+                      command:
                         {{- range .Values.restore.command }}
                           - {{ . -}}
                         {{ end }}
@@ -120,7 +120,7 @@ spec:
                     inputs:
                       artifacts:
                       - name: database-object
-                        path: /backup
+                        path: /backup.sql.gz
                         s3:
                           endpoint: "{{.Values.s3.host}}:{{.Values.s3.post}}"
                           bucket: "{{ .Values.s3.bucket}}"

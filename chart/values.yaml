@@ -46,7 +46,7 @@ restore:
    - sh
    - -c
   env:
-    - name: POSTGRES_PASSWORD
+    - name: PGPASSWORD
       value: passw0rd
     - name: POSTGRES_USER
       value: postgres

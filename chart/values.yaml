@@ -29,7 +29,7 @@ application:
     - name: POSTGRES_PASSWORD
       value: passw0rd
     - name: POSTGRES_USER
-      value: postgres
+      value: aldaas
     - name: POSTGRES_DB
       value: my_db_name
   resources:
@@ -49,7 +49,7 @@ restore:
     - name: PGPASSWORD
       value: passw0rd
     - name: POSTGRES_USER
-      value: postgres
+      value: aldaas
     - name: POSTGRES_DB
       value: my_db_name
   resources:

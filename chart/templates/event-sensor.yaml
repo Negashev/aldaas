@@ -47,6 +47,10 @@ spec:
                               value: '{{`{{steps.generate-volume.outputs.parameters.pvc-name}}`}}'
                     - - name: load-backup
                         template: load-backup
+                        arguments:
+                            parameters:
+                              - name: db-ip
+                                value: '{{`{{steps.db-for-prepare-aldaas.ip}}`}}'
                   - name: db-for-prepare-aldaas
                     daemon: true
                     container:
@@ -101,15 +105,13 @@ spec:
                           - {{ . -}}
                         {{ end }}
                       {{- end }}
-                      {{- if  .Values.restore.env }}
                       env:
                         - name: ALDAAS_HOST_DAEMON
-                          value: '{{`{{steps.db-for-prepare-aldaas.ip}}`}}'
+                          value: '{{`{{inputs.parameters.db-ip}}`}}'
                         {{- range .Values.restore.env }}
                         - name: {{ .name }}
                           value: {{ .value }}
                         {{- end }}
-                      {{- end }}
                       image: "{{ .Values.application.image }}:{{ .Values.application.tag }}"
                       {{- with .Values.restore.resources }}
                       resources:
@@ -126,10 +128,12 @@ spec:
                           insecure: {{ .Values.s3.insecure}}
                           accessKeySecret:
                             name: {{ template "s3.credentials" . }}
-                            key: accessKey
+                            key: accesskey
                           secretKeySecret:
                             name: {{ template "s3.credentials" . }}
-                            key: secretKey
+                            key: secretkey
+                      parameters:
+                        - name: db-ip
                   - name: generate-volume
                     inputs:
                       parameters:

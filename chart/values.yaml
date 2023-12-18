@@ -1,6 +1,9 @@
+# SA from argo (add some rbac) 
 serviceAccountName: argo-workflow
+# create argo event bus with default name in NS for aldaas
 EventBus:
   enabled: true
+# s3 with backups (source data for aldaas) which update every day for example 
 s3:
   existingSecret: ""
   accesskey: ""
@@ -11,3 +14,48 @@ s3:
   insecure: true
   prefix: spilo/acid-database/shasum/logical_backups
   suffix: .sql.gz
+# storage for db after restore from s3
+storage: 10Gi
+# database which restore from backup to saas
+application:
+  image: postgres
+  tag: latest
+  port: 5432
+  storage: 10Gi
+  mount: /var/lib/postgresql/data
+  args:
+  command:
+  env:
+    - name: POSTGRES_PASSWORD
+      value: passw0rd
+    - name: POSTGRES_USER
+      value: postgres
+    - name: POSTGRES_DB
+      value: my_db_name
+  resources:
+    requests:
+      cpu: 100m
+      memory: 1Gi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+restore:
+  args:
+   - gunzip -c `ls -1 /backup/*.sql.gz` | psql -h $ALDAAS_HOST_DAEMON -p 5432 -U $POSTGRES_USER -d $POSTGRES_DB
+  command:
+   - sh
+   - -c
+  env:
+    - name: POSTGRES_PASSWORD
+      value: passw0rd
+    - name: POSTGRES_USER
+      value: postgres
+    - name: POSTGRES_DB
+      value: my_db_name
+  resources:
+    requests:
+      cpu: 100m
+      memory: 1Gi
+    limits:
+      cpu: 1000m
+      memory: 1Gi

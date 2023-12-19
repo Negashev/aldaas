@@ -41,7 +41,7 @@ spec:
                           template: load-backup
                       - - name: echo
                           template: echo
-                          inputs:
+                          arguments:
                             parameters:
                               - name: pvc-name
                                 value: '{{`{{steps.load-backup.outputs.parameters.pvc-name}}`}}'

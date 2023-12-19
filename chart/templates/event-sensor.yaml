@@ -60,8 +60,8 @@ spec:
                             parameters:
                               - name: pvc-name
                                 value: '{{`{{steps.generate-volume.outputs.parameters.pvc-name}}`}}'
-                      - - name: load-backup
-                          template: load-backup
+                      - - name: load-backup-to-database
+                          template: load-backup-to-database
                           arguments:
                               parameters:
                                 - name: db-ip
@@ -116,7 +116,7 @@ spec:
                       - name: workdir
                         persistentVolumeClaim:
                           claimName: '{{`{{inputs.parameters.pvc-name}}`}}'
-                  - name: load-backup
+                  - name: load-backup-to-database
                     container:
                       {{- if  .Values.restore.args }}
                       args:

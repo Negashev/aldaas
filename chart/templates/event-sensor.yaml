@@ -37,20 +37,45 @@ spec:
                 templates:
                   - name: init
                     steps:
-                    - - name: generate-volume
-                        template: generate-volume
-                    - - name: db-for-prepare-aldaas
-                        template: db-for-prepare-aldaas
-                        arguments:
-                          parameters:
-                            - name: pvc-name
-                              value: '{{`{{steps.generate-volume.outputs.parameters.pvc-name}}`}}'
-                    - - name: load-backup
-                        template: load-backup
-                        arguments:
+                      - - name: load-backup
+                          template: load-backup
+                      - - name: echo
+                          template: echo
+                          inputs:
                             parameters:
-                              - name: db-ip
-                                value: '{{`{{steps.db-for-prepare-aldaas.ip}}`}}'
+                              - name: pvc-name
+                                value: '{{`{{steps.load-backup.outputs.parameters.pvc-name}}`}}'
+                  - name: load-backup
+                    outputs:
+                      parameters:
+                        - name: pvc-name
+                          valueFrom:
+                            parameter: '{{`{{steps.generate-volume.outputs.parameters.pvc-name}}`}}'
+                    steps:
+                      - - name: generate-volume
+                          template: generate-volume
+                      - - name: db-for-prepare-aldaas
+                          template: db-for-prepare-aldaas
+                          arguments:
+                            parameters:
+                              - name: pvc-name
+                                value: '{{`{{steps.generate-volume.outputs.parameters.pvc-name}}`}}'
+                      - - name: load-backup
+                          template: load-backup
+                          arguments:
+                              parameters:
+                                - name: db-ip
+                                  value: '{{`{{steps.db-for-prepare-aldaas.ip}}`}}'
+                  - name: echo
+                    container:
+                      args:
+                        - '{{`{{inputs.parameters.pvc-name}}`}}'
+                      command:
+                        - cowsay
+                      image: docker/whalesay
+                    inputs:
+                      parameters:
+                        - name: pvc-name
                   - name: db-for-prepare-aldaas
                     daemon: true
                     container:  

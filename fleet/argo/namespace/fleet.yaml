@@ -2,9 +2,3 @@ defaultNamespace: aldaas
 
 labels:
   aldaas: namespace
-
-dependsOn:
-  - selector:
-      matchLabels:
-        argo: events
-        argo: workflows

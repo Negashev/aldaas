@@ -167,12 +167,13 @@ spec:
                         apiVersion: v1
                         kind: PersistentVolumeClaim
                         metadata:
-                          generateName: pvc-backup-{{ template "aldaas.fullname" . }}-
+                          generateName: backup-{{ template "aldaas.fullname" . }}-
                         spec:
+                          storageClassName: {{ .Values.rook.storageClassName }}
                           accessModes: ['ReadWriteOnce']
                           resources:
                             requests:
-                              storage: {{ .Values.storage }}
+                              storage: {{ .Values.application.storage }}
                     outputs:
                       parameters:
                         - name: pvc-name

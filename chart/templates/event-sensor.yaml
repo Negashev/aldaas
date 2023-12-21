@@ -39,8 +39,8 @@ spec:
                     steps:
                       - - name: load-backup
                           template: load-backup
-                      - - name: echo
-                          template: echo
+                      - - name: create-snaphot
+                          template: create-snaphot
                           arguments:
                             parameters:
                               - name: pvc-name
@@ -72,16 +72,27 @@ spec:
                               parameters:
                                 - name: db-ip
                                   value: '{{`{{steps.db-for-prepare-aldaas.ip}}`}}'
-                  - name: echo
-                    container:
-                      args:
-                        - '{{`{{inputs.parameters.pvc-name}}`}}'
-                      command:
-                        - cowsay
-                      image: docker/whalesay
+                  - name: create-snaphot
                     inputs:
                       parameters:
                         - name: pvc-name
+                    resource:
+                      action: create
+                      setOwnerReference: true
+                      manifest: |
+                        apiVersion: snapshot.storage.k8s.io/v1
+                        kind: VolumeSnapshot
+                        metadata:
+                          generateName: snap-{{ template "aldaas.fullname" . }}-
+                        spec:
+                          volumeSnapshotClassName: {{ .Values.rook.volumeSnapshotClassName }}
+                          source:
+                            persistentVolumeClaimName: '{{`{{inputs.parameters.pvc-name}}`}}'
+                    outputs:
+                      parameters:
+                        - name: pvc-name
+                          valueFrom:
+                            jsonPath: '{{`{.metadata.name}`}}'
                   - name: clean-volume
                     container:
                       args:

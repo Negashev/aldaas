@@ -16,6 +16,12 @@ rules:
       - persistentvolumeclaims
     verbs:
       - "*"
+  - apiGroups:
+      - snapshot.storage.k8s.io
+    resources:
+      - volumesnapshots
+    verbs:
+      - "*"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

@@ -54,6 +54,12 @@ spec:
                     steps:
                       - - name: generate-volume
                           template: generate-volume
+                      - - name: clean-volume
+                          template: clean-volume
+                          arguments:
+                            parameters:
+                              - name: pvc-name
+                                value: '{{`{{steps.generate-volume.outputs.parameters.pvc-name}}`}}'
                       - - name: db-for-prepare-aldaas
                           template: db-for-prepare-aldaas
                           arguments:
@@ -76,9 +82,27 @@ spec:
                     inputs:
                       parameters:
                         - name: pvc-name
+                  - name: clean-volume
+                    container:
+                      args:
+                        - rm -rf /data/*
+                      command:
+                        - sh
+                        - -c
+                      image: alpine
+                      volumeMounts:
+                      - name: workdir
+                        mountPath: /data
+                    inputs:
+                      parameters:
+                        - name: pvc-name
+                    volumes:
+                      - name: workdir
+                        persistentVolumeClaim:
+                          claimName: '{{`{{inputs.parameters.pvc-name}}`}}'
                   - name: db-for-prepare-aldaas
                     daemon: true
-                    container:  
+                    container:
                       volumeMounts:
                       - name: workdir
                         mountPath: {{ .Values.application.mount }}

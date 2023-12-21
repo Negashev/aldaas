@@ -45,6 +45,12 @@ spec:
                             parameters:
                               - name: pvc-name
                                 value: '{{`{{steps.load-backup.outputs.parameters.pvc-name}}`}}'
+                      - - name: check-snaphot
+                          template: create-snaphot
+                          arguments:
+                            parameters:
+                              - name: snap-name
+                                value: '{{`{{steps.create-snaphot.outputs.parameters.snap-name}}`}}'
                   - name: load-backup
                     outputs:
                       parameters:
@@ -72,6 +78,34 @@ spec:
                               parameters:
                                 - name: db-ip
                                   value: '{{`{{steps.db-for-prepare-aldaas.ip}}`}}'
+                  - name: check-snaphot
+                    inputs:
+                      parameters:
+                        - name: snap-name
+                    resource:
+                      action: create
+                      setOwnerReference: true
+                      manifest: |
+                        apiVersion: v1
+                        kind: PersistentVolumeClaim
+                        metadata:
+                          generateName: pvc-{{ template "aldaas.fullname" . }}-
+                        spec:
+                          storageClassName: {{ .Values.rook.storageClassName }}
+                          dataSource:
+                            name: '{{`{{inputs.parameters.snap-name}}`}}'
+                            kind: VolumeSnapshot
+                            apiGroup: snapshot.storage.k8s.io
+                          accessModes:
+                            - ReadWriteOnce
+                          resources:
+                            requests:
+                              storage: {{ .Values.application.storage }}
+                    outputs:
+                      parameters:
+                        - name: pvc-name-from-snap
+                          valueFrom:
+                            jsonPath: '{{`{.metadata.name}`}}'
                   - name: create-snaphot
                     inputs:
                       parameters:
@@ -90,7 +124,7 @@ spec:
                             persistentVolumeClaimName: '{{`{{inputs.parameters.pvc-name}}`}}'
                     outputs:
                       parameters:
-                        - name: pvc-name
+                        - name: snap-name
                           valueFrom:
                             jsonPath: '{{`{.metadata.name}`}}'
                   - name: clean-volume

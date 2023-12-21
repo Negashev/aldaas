@@ -46,7 +46,7 @@ spec:
                               - name: pvc-name
                                 value: '{{`{{steps.load-backup.outputs.parameters.pvc-name}}`}}'
                       - - name: check-snaphot
-                          template: create-snaphot
+                          template: check-snaphot
                           arguments:
                             parameters:
                               - name: snap-name

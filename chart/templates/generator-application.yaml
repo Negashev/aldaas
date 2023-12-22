@@ -68,11 +68,11 @@ spec:
             resources:
               requests:
                 storage: {{ .Values.application.storage }}
-        outputs:
-          parameters:
-            - name: pvc-name-from-snap
-              valueFrom:
-                jsonPath: '{{`{.metadata.name}`}}'
+      outputs:
+        parameters:
+          - name: pvc-name-from-snap
+            valueFrom:
+              jsonPath: '{{`{.metadata.name}`}}'
     - name: create-deploment
       inputs:
         parameters:

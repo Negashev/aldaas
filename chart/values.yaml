@@ -5,6 +5,7 @@ kubectl: v1.27.9
 EventBus:
   enabled: true
 
+domain: 
 rook:
   storageClassName: ceph-block
   volumeSnapshotClassName: ceph-block

@@ -29,6 +29,14 @@ spec:
               parameters:
               - name: pvc-name
                 value: '{{`{{steps.create-pvc-from-snapshot.outputs.parameters.pvc-name-from-snap}}`}}'
+        - - name: create-ingress
+            template: create-ingress
+            arguments:
+              parameters:
+              - name: service-name
+                value: '{{`{{steps.create-service.outputs.parameters.service-name}}`}}'
+              - name: pvc-name
+                value: '{{`{{steps.create-pvc-from-snapshot.outputs.parameters.pvc-name-from-snap}}`}}'
     - name: get-last-snapshot
       container:
         name: main
@@ -157,3 +165,35 @@ spec:
               aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
             sessionAffinity: None
             type: ClusterIP
+      outputs:
+        parameters:
+          - name: service-name
+            valueFrom:
+              jsonPath: '{{`{.metadata.name}`}}'
+    - name: create-ingress
+      inputs:
+        parameters:
+          - name: pvc-name
+          - name: service-name
+      resource:
+        action: create
+        setOwnerReference: true
+        manifest: |
+          apiVersion: v1
+          kind: Ingress
+          metadata:
+            generateName: ingress-{{ template "aldaas.fullname" . }}-
+            labels:
+              aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+          spec:
+            rules:
+              - host: {{ .Values.domain }}
+                http:
+                  paths:
+                    - backend:
+                        service:
+                          name: '{{`{{inputs.parameters.service-name}}`}}'
+                          port:
+                            number: 5432
+                      path: /{{ template "aldaas.fullname" . }}/{{`{{inputs.parameters.service-name}}`}}
+                      pathType: Prefix

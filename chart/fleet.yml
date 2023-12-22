@@ -12,6 +12,7 @@ dependsOn:
 helm:
   chart: ./
   values:
+    domain: ${ .ClusterAnnotations.aldaasDomain }
     s3:
       existingSecret: ${ .ClusterAnnotations.aldaasS3Creadentials }
       host: ${ .ClusterAnnotations.aldaasS3Host }

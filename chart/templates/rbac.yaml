@@ -14,12 +14,19 @@ rules:
       - ''
     resources:
       - persistentvolumeclaims
+      - services
     verbs:
       - "*"
   - apiGroups:
       - snapshot.storage.k8s.io
     resources:
       - volumesnapshots
+    verbs:
+      - "*"
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
     verbs:
       - "*"
 ---

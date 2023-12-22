@@ -17,8 +17,8 @@ spec:
               parameters:
               - name: snap-name
                 value: '{{`{{steps.get-last-snapshot.outputs.result}}`}}'
-        - - name: create-database
-            template: create-database
+        - - name: create-deploment
+            template: create-deploment
             arguments:
               parameters:
               - name: pvc-name

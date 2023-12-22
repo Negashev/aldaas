@@ -5,9 +5,19 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   serviceAccountName: {{ .Values.serviceAccountName }}
-  entrypoint: aldaas
+  entrypoint: init
   templates:
-    - name: aldaas
+    - name: init
+      steps:
+        - - name: get-last-snapshot
+            template: get-last-snapshot
+        - - name: create-pvc-from-snapshot
+            template: create-pvc-from-snapshot
+            arguments:
+              parameters:
+              - name: snap-name
+                value: '{{`{{steps.get-last-snapshot.outputs.result}}`}}'
+    - name: get-last-snapshot
       container:
         name: main
         image: rancher/kubectl:{{ .Values.kubectl }}
@@ -20,8 +30,34 @@ spec:
           - volumesnapshots
           - -l
           - status=ready,aldaas={{ template "aldaas.fullname" . }}
-  ttlStrategy:
-    secondsAfterCompletion: 300
-  podGC:
-    strategy: OnPodCompletion
-
+          - --sort-by=.metadata.creationTimestamp
+          - -o
+          - jsonpath="{.items[0].metadata.name}"
+    - name: create-pvc-from-snapshot
+      inputs:
+        parameters:
+          - name: snap-name
+      resource:
+        action: create
+        setOwnerReference: true
+        manifest: |
+          apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            generateName: pvc-{{ template "aldaas.fullname" . }}-
+          spec:
+            storageClassName: {{ .Values.rook.storageClassName }}
+            dataSource:
+              name: '{{`{{inputs.parameters.snap-name}}`}}'
+              kind: VolumeSnapshot
+              apiGroup: snapshot.storage.k8s.io
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: {{ .Values.application.storage }}
+        outputs:
+          parameters:
+            - name: pvc-name-from-snap
+              valueFrom:
+                jsonPath: '{{`{.metadata.name}`}}'

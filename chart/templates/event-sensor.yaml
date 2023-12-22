@@ -2,14 +2,14 @@ apiVersion: argoproj.io/v1alpha1
 kind: Sensor
 metadata:
   name: minio-{{ template "aldaas.fullname" . }}
-  namespace: aldaas
+  namespace: {{ .Release.Namespace }}
 spec:
   dependencies:
     - eventName: backup
       eventSourceName: minio-{{ template "aldaas.fullname" . }}
       name: minio-dep
   template:
-    serviceAccountName: argo-workflow
+    serviceAccountName: {{ .Values.serviceAccountName }}
   triggers:
     - retryStrategy:
         steps: 3
@@ -74,6 +74,12 @@ spec:
                               parameters:
                                 - name: db-ip
                                   value: '{{`{{steps.create-check-database.ip}}`}}'
+                      - - name: set-status-snapshot
+                          template: set-status-snapshot
+                          arguments:
+                              parameters:
+                                - name: snap-name
+                                value: '{{`{{inputs.parameters.snap-name}}`}}'
                   - name: load-backup
                     outputs:
                       parameters:
@@ -101,6 +107,22 @@ spec:
                               parameters:
                                 - name: db-ip
                                   value: '{{`{{steps.db-for-prepare-aldaas.ip}}`}}'
+                  - name: set-status-snapshot
+                    inputs:
+                      parameters:
+                        - name: snap-name
+                    container:
+                      image: rancher/kubectl:{{ .Values.kubectl }}
+                      command:
+                        - kubectl
+                      args:
+                        - -n
+                        - {{ .Release.Namespace }}
+                        - label
+                        - --overwrite
+                        - volumesnapshots
+                        - '{{`{{inputs.parameters.snap-name}}`}}'
+                        - status=ready
                   - name: command-check-database
                     container:
                       {{- if  .Values.check.args }}
@@ -170,6 +192,9 @@ spec:
                         kind: VolumeSnapshot
                         metadata:
                           generateName: snap-{{ template "aldaas.fullname" . }}-
+                          labels:
+                            status: check
+                            aldaas: {{ template "aldaas.fullname" . }}
                         spec:
                           volumeSnapshotClassName: {{ .Values.rook.volumeSnapshotClassName }}
                           source:

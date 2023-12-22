@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: EventSource
 metadata:
   name: minio-{{ template "aldaas.fullname" . }}
-  namespace: aldaas
+  namespace: {{ .Release.Namespace }}
 spec:
   minio:
     backup:

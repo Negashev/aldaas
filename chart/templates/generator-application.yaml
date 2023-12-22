@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: {{ template "aldaas.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  serviceAccountName: {{ .Values.serviceAccountName }}
+  entrypoint: aldaas
+  templates:
+    - name: aldaas
+      container:
+        name: main
+        image: rancher/kubectl:{{ .Values.kubectl }}
+        command:
+          - kubectl
+        args:
+          - -n
+          - {{ .Release.Namespace }}
+          - get
+          - volumesnapshots
+          - -l
+          - status=ready,aldaas={{ template "aldaas.fullname" . }}
+  ttlStrategy:
+    secondsAfterCompletion: 300
+  podGC:
+    strategy: OnPodCompletion
+

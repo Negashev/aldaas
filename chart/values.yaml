@@ -6,6 +6,8 @@ EventBus:
   enabled: true
 
 domain: 
+proxy:
+  port: 8080
 rook:
   storageClassName: ceph-block
   volumeSnapshotClassName: ceph-block

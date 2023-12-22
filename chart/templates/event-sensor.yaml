@@ -51,6 +51,23 @@ spec:
                             parameters:
                               - name: snap-name
                                 value: '{{`{{steps.create-snaphot.outputs.parameters.snap-name}}`}}'
+                  - name: check-snaphot
+                    inputs:
+                      parameters:
+                        - name: snap-name
+                    steps:
+                      - - name: create-check-snaphot
+                          template: create-check-snaphot
+                          arguments:
+                            parameters:
+                              - name: snap-name
+                                value: '{{`{{inputs.parameters.snap-name}}`}}'
+                      - - name: create-check-database
+                          template: db-for-aldaas
+                          arguments:
+                            parameters:
+                              - name: pvc-name-from-snap
+                                value: '{{`{{steps.create-check-snaphot.outputs.parameters.pvc-name-from-snap}}`}}'
                   - name: load-backup
                     outputs:
                       parameters:
@@ -67,7 +84,7 @@ spec:
                               - name: pvc-name
                                 value: '{{`{{steps.generate-volume.outputs.parameters.pvc-name}}`}}'
                       - - name: db-for-prepare-aldaas
-                          template: db-for-prepare-aldaas
+                          template: db-for-aldaas
                           arguments:
                             parameters:
                               - name: pvc-name
@@ -78,7 +95,7 @@ spec:
                               parameters:
                                 - name: db-ip
                                   value: '{{`{{steps.db-for-prepare-aldaas.ip}}`}}'
-                  - name: check-snaphot
+                  - name: create-check-snaphot
                     inputs:
                       parameters:
                         - name: snap-name
@@ -145,7 +162,7 @@ spec:
                       - name: workdir
                         persistentVolumeClaim:
                           claimName: '{{`{{inputs.parameters.pvc-name}}`}}'
-                  - name: db-for-prepare-aldaas
+                  - name: db-for-aldaas
                     daemon: true
                     container:
                       volumeMounts:

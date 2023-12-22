@@ -79,7 +79,7 @@ spec:
                           arguments:
                               parameters:
                                 - name: snap-name
-                                value: '{{`{{inputs.parameters.snap-name}}`}}'
+                                  value: '{{`{{inputs.parameters.snap-name}}`}}'
                   - name: load-backup
                     outputs:
                       parameters:

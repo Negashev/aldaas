@@ -133,7 +133,7 @@ spec:
                 volumes:
                   - persistentVolumeClaim:
                       claimName: '{{`{{inputs.parameters.pvc-name}}`}}'
-                      name: workdir
+                    name: workdir
     - name: create-service
       inputs:
         parameters:

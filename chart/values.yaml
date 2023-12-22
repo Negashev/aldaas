@@ -61,3 +61,9 @@ restore:
     limits:
       cpu: 1000m
       memory: 1Gi
+check:
+  args:
+   - psql -h $ALDAAS_HOST_DAEMON -p 5432 -U $POSTGRES_USER -d $POSTGRES_DB -c "\l"
+  command:
+   - sh
+   - -c

@@ -68,6 +68,12 @@ spec:
                             parameters:
                               - name: pvc-name
                                 value: '{{`{{steps.create-check-snaphot.outputs.parameters.pvc-name-from-snap}}`}}'
+                      - - name: command-check-database
+                          template: command-check-database
+                          arguments:
+                              parameters:
+                                - name: db-ip
+                                  value: '{{`{{steps.create-check-database.ip}}`}}'
                   - name: load-backup
                     outputs:
                       parameters:
@@ -95,6 +101,35 @@ spec:
                               parameters:
                                 - name: db-ip
                                   value: '{{`{{steps.db-for-prepare-aldaas.ip}}`}}'
+                  - name: command-check-database
+                    container:
+                      {{- if  .Values.check.args }}
+                      args:
+                        {{- range .Values.check.args }}
+                          - {{ . -}}
+                        {{ end }}
+                      {{- end }}
+                      {{- if  .Values.check.command }}
+                      command:
+                        {{- range .Values.check.command }}
+                          - {{ . -}}
+                        {{ end }}
+                      {{- end }}
+                      env:
+                        - name: ALDAAS_HOST_DAEMON
+                          value: '{{`{{inputs.parameters.db-ip}}`}}'
+                        {{- range .Values.restore.env }}
+                        - name: {{ .name }}
+                          value: {{ .value }}
+                        {{- end }}
+                      image: "{{ .Values.application.image }}:{{ .Values.application.tag }}"
+                      {{- with .Values.restore.resources }}
+                      resources:
+                        {{- toYaml . | nindent 24 }}
+                      {{- end }}
+                    inputs:
+                      parameters:
+                        - name: db-ip
                   - name: create-check-snaphot
                     inputs:
                       parameters:

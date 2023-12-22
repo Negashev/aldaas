@@ -36,7 +36,7 @@ spec:
                 entrypoint: init
                 podGC:
                   strategy: OnPodSuccess
-                  deleteDelayDuration: 30s
+                  deleteDelayDuration: 300s
                   labelSelector:
                     matchLabels:
                       should-be-deleted: "true"

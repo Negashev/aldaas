@@ -34,6 +34,12 @@ spec:
                     - name: db-file
                       value: THIS_WILL_BE_REPLACED
                 entrypoint: init
+                podGC:
+                  strategy: OnPodSuccess
+                  deleteDelayDuration: 30s
+                  labelSelector:
+                    matchLabels:
+                      should-be-deleted: "true"
                 templates:
                   - name: init
                     steps:
@@ -124,6 +130,9 @@ spec:
                         - '{{`{{inputs.parameters.snap-name}}`}}'
                         - status=ready
                   - name: command-check-database
+                    metadata:
+                      labels:
+                        should-be-deleted: "true"
                     container:
                       {{- if  .Values.check.args }}
                       args:
@@ -223,6 +232,9 @@ spec:
                         persistentVolumeClaim:
                           claimName: '{{`{{inputs.parameters.pvc-name}}`}}'
                   - name: db-for-aldaas
+                    metadata:
+                      labels:
+                        should-be-deleted: "true"
                     daemon: true
                     container:
                       volumeMounts:
@@ -306,6 +318,9 @@ spec:
                       parameters:
                         - name: db-ip
                   - name: generate-volume
+                    metadata:
+                      labels:
+                        should-be-deleted: "true"
                     resource:
                       action: create
                       setOwnerReference: true

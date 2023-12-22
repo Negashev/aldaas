@@ -169,9 +169,9 @@ spec:
               aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
           spec:
             ports:
-              - port: {{ .Values.application.port }}
+              - port: {{ .Values.proxy.port }}
                 protocol: TCP
-                targetPort: {{ .Values.application.port }}
+                targetPort: {{ .Values.proxy.port }}
             selector:
               aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
             sessionAffinity: None

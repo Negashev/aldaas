@@ -17,6 +17,18 @@ spec:
               parameters:
               - name: snap-name
                 value: '{{`{{steps.get-last-snapshot.outputs.result}}`}}'
+        - - name: create-database
+            template: create-database
+            arguments:
+              parameters:
+              - name: pvc-name
+                value: '{{`{{steps.create-pvc-from-snapshot.outputs.parameters.pvc-name-from-snap}}`}}'
+          - name: create-service
+            template: create-service
+            arguments:
+              parameters:
+              - name: pvc-name
+                value: '{{`{{steps.create-pvc-from-snapshot.outputs.parameters.pvc-name-from-snap}}`}}'
     - name: get-last-snapshot
       container:
         name: main
@@ -61,3 +73,87 @@ spec:
             - name: pvc-name-from-snap
               valueFrom:
                 jsonPath: '{{`{.metadata.name}`}}'
+    - name: create-deploment
+      inputs:
+        parameters:
+          - name: pvc-name
+      resource:
+        action: create
+        setOwnerReference: true
+        manifest: |
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:            
+            generateName: app-{{ template "aldaas.fullname" . }}-
+            labels:
+              aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+            template:
+              metadata:
+                labels:
+                  aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+              spec:
+                containers:
+                  - imagePullPolicy: Always
+                    name: application
+                    volumeMounts:
+                      - name: workdir
+                        mountPath: {{ .Values.application.mount }}
+                    {{- if  .Values.application.args }}
+                    command:
+                      {{- range .Values.application.args }}
+                        - {{ . -}}
+                      {{ end }}
+                    {{- end }}
+                    {{- if  .Values.application.command }}
+                    args:
+                      {{- range .Values.application.command }}
+                        - {{ . -}}
+                      {{ end }}
+                    {{- end }}
+                    {{- if  .Values.application.env }}
+                    env:
+                      {{- range .Values.application.env }}
+                      - name: {{ .name }}
+                        value: {{ .value }}
+                      {{- end }}
+                    {{- end }}
+                    image: "{{ .Values.application.image }}:{{ .Values.application.tag }}"                
+                    readinessProbe:
+                      tcpSocket:
+                        port: {{ .Values.application.port }}
+                    {{- with .Values.application.resources }}
+                    resources:
+                      {{- toYaml . | nindent 22 }}
+                    {{- end }}
+                volumes:
+                  - persistentVolumeClaim:
+                      claimName: '{{`{{inputs.parameters.pvc-name}}`}}'
+                      name: workdir
+    - name: create-service
+      inputs:
+        parameters:
+          - name: pvc-name
+      resource:
+        action: create
+        setOwnerReference: true
+        manifest: |
+          apiVersion: v1
+          kind: Service
+          metadata:
+            generateName: svc-{{ template "aldaas.fullname" . }}-
+            labels:
+              aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+          spec:
+            ports:
+              - port: {{ .Values.application.port }}
+                protocol: TCP
+                targetPort: {{ .Values.application.port }}
+            selector:
+              aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+            sessionAffinity: None
+            type: ClusterIP

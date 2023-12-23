@@ -37,7 +37,7 @@ spec:
                 value: '{{`{{steps.create-service.outputs.parameters.service-name}}`}}'
               - name: pvc-name
                 value: '{{`{{steps.create-pvc-from-snapshot.outputs.parameters.pvc-name-from-snap}}`}}'
-          - name: wait-service
+        - - name: wait-service
             template: wait-service
             arguments:
               parameters:

@@ -8,7 +8,7 @@ EventBus:
 domain: 
 tunnel:
   image: ghcr.io/negashev/aldaas
-  tag: latest
+  tag: main
   port: 8080
 rook:
   storageClassName: ceph-block

@@ -189,9 +189,11 @@ spec:
             ports:
               - port: {{ .Values.application.port }}
                 protocol: TCP
+                name: application
                 targetPort: {{ .Values.application.port }}
               - port: {{ .Values.tunnel.port }}
                 protocol: TCP
+                name: tunnel
                 targetPort: {{ .Values.tunnel.port }}
             selector:
               aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'

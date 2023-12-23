@@ -37,6 +37,23 @@ spec:
                 value: '{{`{{steps.create-service.outputs.parameters.service-name}}`}}'
               - name: pvc-name
                 value: '{{`{{steps.create-pvc-from-snapshot.outputs.parameters.pvc-name-from-snap}}`}}'
+          - name: wait-service
+            template: wait-service
+            arguments:
+              parameters:
+              - name: service-name
+                value: '{{`{{steps.create-service.outputs.parameters.service-name}}`}}'
+    - name: wait-service
+      container:
+        args:
+          - while ! nc -z '{{`{{inputs.parameters.service-name}}`}}' {{ .Values.application.port }}; do sleep 1; done
+        command:
+          - sh
+          - -c
+        image: alpine
+      inputs:
+        parameters:
+          - name: service-name
     - name: get-last-snapshot
       container:
         name: main

@@ -6,7 +6,9 @@ EventBus:
   enabled: true
 
 domain: 
-proxy:
+tunnel:
+  image: ghcr.io/negashev/aldaas
+  tag: latest
   port: 8080
 rook:
   storageClassName: ceph-block

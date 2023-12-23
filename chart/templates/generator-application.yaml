@@ -139,16 +139,17 @@ spec:
                       {{- toYaml . | nindent 22 }}
                     {{- end }}
                   - imagePullPolicy: Always
-                    name: proxy
-                    image: mhzed/wstunnel
+                    name: tunnel
+                    image: "{{ .Values.tunnel.image }}:{{ .Values.tunnel.tag }}"  
                     args:
-                     - -s
-                     - 0.0.0.0:{{ .Values.proxy.port }}
-                     - -t
+                     - server
+                     - -listen_ws
+                     - 0.0.0.0:{{ .Values.tunnel.port }}
+                     - -connect_tcp
                      - 0.0.0.0:{{ .Values.application.port }}
                     readinessProbe:
                       tcpSocket:
-                        port: {{ .Values.proxy.port }}
+                        port: {{ .Values.tunnel.port }}
                 volumes:
                   - persistentVolumeClaim:
                       claimName: '{{`{{inputs.parameters.pvc-name}}`}}'
@@ -169,9 +170,9 @@ spec:
               aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
           spec:
             ports:
-              - port: {{ .Values.proxy.port }}
+              - port: {{ .Values.tunnel.port }}
                 protocol: TCP
-                targetPort: {{ .Values.proxy.port }}
+                targetPort: {{ .Values.tunnel.port }}
             selector:
               aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
             sessionAffinity: None
@@ -205,6 +206,6 @@ spec:
                         service:
                           name: '{{`{{inputs.parameters.service-name}}`}}'
                           port:
-                            number: {{ .Values.proxy.port }}
+                            number: {{ .Values.tunnel.port }}
                       path: /{{ template "aldaas.fullname" . }}/{{`{{inputs.parameters.service-name}}`}}
                       pathType: Prefix

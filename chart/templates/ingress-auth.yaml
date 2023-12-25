@@ -6,5 +6,5 @@ metadata:
   namespace: {{ .Release.Namespace }}
 type: Opaque
 stringData:
-  auth: {{ .Values.tunnel.auth.htpasswd | default (htpasswd .Values.tunnel.auth.username .Values.tunnel.auth.password) | b64enc | quote }}
+  auth: {{ .Values.tunnel.auth.htpasswd | default (htpasswd .Values.tunnel.auth.username .Values.tunnel.auth.password) | quote }}
 {{- end -}}

@@ -219,6 +219,10 @@ spec:
             generateName: ingress-{{ template "aldaas.fullname" . }}-
             labels:
               aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+            annotations:
+              nginx.ingress.kubernetes.io/auth-type: basic
+              nginx.ingress.kubernetes.io/auth-secret: "{{ template "aldaas.fullname" . }}-ingress-auth"
+              nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
           spec:
             rules:
               - host: {{ .Values.domain }}

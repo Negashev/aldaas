@@ -1,0 +1,10 @@
+{{- if empty .Values.tunnel.auth.htpasswd }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "{{ template "aldaas.fullname" . }}-ingress-auth"
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+stringData:
+  auth: {{ .Values.tunnel.auth.htpasswd | default (htpasswd .Values.tunnel.auth.username .Values.tunnel.auth.password) | b64enc | quote }}
+{{- end -}}

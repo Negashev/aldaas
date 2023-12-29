@@ -72,6 +72,9 @@ spec:
           - -o
           - jsonpath={.items[0].metadata.name}
     - name: create-pvc-from-snapshot
+      inputs:
+        parameters:
+          - name: snap-name
       resource:
         action: create
         setOwnerReference: true

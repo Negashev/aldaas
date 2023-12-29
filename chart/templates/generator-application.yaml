@@ -13,57 +13,25 @@ spec:
             template: get-last-snapshot
         - - name: create-pvc-from-snapshot
             template: create-pvc-from-snapshot
-            arguments:
-              parameters:
-              - name: snap-name
-                value: '{{`{{steps.get-last-snapshot.outputs.result}}`}}'
         - - name: create-deploment
             template: create-deploment
-            arguments:
-              parameters:
-              - name: pvc-name
-                value: '{{`{{steps.create-pvc-from-snapshot.outputs.parameters.pvc-name-from-snap}}`}}'
           - name: create-service
             template: create-service
-            arguments:
-              parameters:
-              - name: pvc-name
-                value: '{{`{{steps.create-pvc-from-snapshot.outputs.parameters.pvc-name-from-snap}}`}}'
           - name: create-metrics
             template: create-metrics
-            arguments:
-              parameters:
-              - name: pvc-name
-                value: '{{`{{steps.create-pvc-from-snapshot.outputs.parameters.pvc-name-from-snap}}`}}'
-        - - name: create-ingress
+          - name: create-ingress
             template: create-ingress
-            arguments:
-              parameters:
-              - name: service-name
-                value: '{{`{{steps.create-service.outputs.parameters.service-name}}`}}'
-              - name: pvc-name
-                value: '{{`{{steps.create-pvc-from-snapshot.outputs.parameters.pvc-name-from-snap}}`}}'
-        - - name: wait-service
+          - name: wait-service
             template: wait-service
-            arguments:
-              parameters:
-              - name: service-name
-                value: '{{`{{steps.create-service.outputs.parameters.service-name}}`}}'
     - name: wait-service
       container:
         args:
-          - while ! nc -z '{{`{{inputs.parameters.service-name}}`}}' {{ .Values.application.port }}; do sleep 1; done
+          - while ! nc -z '{{`{{workflow.name}}`}}' {{ .Values.application.port }}; do sleep 1; done
         command:
           - sh
           - -c
         image: alpine
-      inputs:
-        parameters:
-          - name: service-name
     - name: create-metrics
-      inputs:
-        parameters:
-          - name: pvc-name
       resource:
         action: create
         setOwnerReference: true
@@ -71,9 +39,9 @@ spec:
           apiVersion: monitoring.coreos.com/v1
           kind: ServiceMonitor
           metadata:
-            generateName: metrics-{{ template "aldaas.fullname" . }}-
+            name: '{{`{{workflow.name}}`}}'
             labels:
-              aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+              aldaas: '{{`{{workflow.name}}`}}'
               helm: {{ template "aldaas.fullname" . }}
           spec:
             endpoints:
@@ -81,7 +49,7 @@ spec:
                 path: /metrics
             selector:
               matchLabels:
-                aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+                aldaas: '{{`{{workflow.name}}`}}'
                 helm: {{ template "aldaas.fullname" . }}
     - name: get-last-snapshot
       container:
@@ -100,9 +68,6 @@ spec:
           - -o
           - jsonpath={.items[0].metadata.name}
     - name: create-pvc-from-snapshot
-      inputs:
-        parameters:
-          - name: snap-name
       resource:
         action: create
         setOwnerReference: true
@@ -110,7 +75,7 @@ spec:
           apiVersion: v1
           kind: PersistentVolumeClaim
           metadata:
-            generateName: pvc-{{ template "aldaas.fullname" . }}-
+            name: '{{`{{workflow.name}}`}}'
           spec:
             storageClassName: {{ .Values.rook.storageClassName }}
             dataSource:
@@ -122,15 +87,7 @@ spec:
             resources:
               requests:
                 storage: {{ .Values.application.storage }}
-      outputs:
-        parameters:
-          - name: pvc-name-from-snap
-            valueFrom:
-              jsonPath: '{{`{.metadata.name}`}}'
     - name: create-deploment
-      inputs:
-        parameters:
-          - name: pvc-name
       resource:
         action: create
         setOwnerReference: true
@@ -138,20 +95,20 @@ spec:
           apiVersion: apps/v1
           kind: Deployment
           metadata:            
-            generateName: app-{{ template "aldaas.fullname" . }}-
+            name: '{{`{{workflow.name}}`}}'
             labels:
-              aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+              aldaas: '{{`{{workflow.name}}`}}'
               helm: {{ template "aldaas.fullname" . }}
           spec:
             replicas: 1
             selector:
               matchLabels:
-                aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+                aldaas: '{{`{{workflow.name}}`}}'
                 helm: {{ template "aldaas.fullname" . }}
             template:
               metadata:
                 labels:
-                  aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+                  aldaas: '{{`{{workflow.name}}`}}'
                   helm: {{ template "aldaas.fullname" . }}
               spec:
                 containers:
@@ -203,12 +160,9 @@ spec:
                         port: {{ .Values.tunnel.port }}
                 volumes:
                   - persistentVolumeClaim:
-                      claimName: '{{`{{inputs.parameters.pvc-name}}`}}'
+                      claimName: '{{`{{workflow.name}}`}}'
                     name: workdir
     - name: create-service
-      inputs:
-        parameters:
-          - name: pvc-name
       resource:
         action: create
         setOwnerReference: true
@@ -216,9 +170,9 @@ spec:
           apiVersion: v1
           kind: Service
           metadata:
-            generateName: svc-{{ template "aldaas.fullname" . }}-
+            name: '{{`{{workflow.name}}`}}'
             labels:
-              aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+              aldaas: '{{`{{workflow.name}}`}}'
               helm: {{ template "aldaas.fullname" . }}
           spec:
             ports:
@@ -231,20 +185,11 @@ spec:
                 name: tunnel
                 targetPort: {{ .Values.tunnel.port }}
             selector:
-              aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+              aldaas: '{{`{{workflow.name}}`}}'
               helm: {{ template "aldaas.fullname" . }}
             sessionAffinity: None
             type: ClusterIP
-      outputs:
-        parameters:
-          - name: service-name
-            valueFrom:
-              jsonPath: '{{`{.metadata.name}`}}'
     - name: create-ingress
-      inputs:
-        parameters:
-          - name: pvc-name
-          - name: service-name
       resource:
         action: create
         setOwnerReference: true
@@ -252,9 +197,9 @@ spec:
           apiVersion: networking.k8s.io/v1
           kind: Ingress
           metadata:
-            generateName: ingress-{{ template "aldaas.fullname" . }}-
+            name: '{{`{{workflow.name}}`}}'
             labels:
-              aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+              aldaas: '{{`{{workflow.name}}`}}'
               helm: {{ template "aldaas.fullname" . }}
           spec:
             rules:
@@ -263,7 +208,7 @@ spec:
                   paths:
                     - backend:
                         service:
-                          name: '{{`{{inputs.parameters.service-name}}`}}'
+                          name: '{{`{{workflow.name}}`}}'
                           port:
                             number: {{ .Values.tunnel.port }}
                       path: /{{ template "aldaas.fullname" . }}/{{ .Values.tunnel.token }}/{{`{{workflow.name}}`}}

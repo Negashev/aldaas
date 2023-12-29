@@ -29,6 +29,12 @@ spec:
               parameters:
               - name: pvc-name
                 value: '{{`{{steps.create-pvc-from-snapshot.outputs.parameters.pvc-name-from-snap}}`}}'
+          - name: create-metrics
+            template: create-metrics
+            arguments:
+              parameters:
+              - name: pvc-name
+                value: '{{`{{steps.create-pvc-from-snapshot.outputs.parameters.pvc-name-from-snap}}`}}'
         - - name: create-ingress
             template: create-ingress
             arguments:
@@ -54,6 +60,29 @@ spec:
       inputs:
         parameters:
           - name: service-name
+    - name: create-metrics
+      inputs:
+        parameters:
+          - name: pvc-name
+      resource:
+        action: create
+        setOwnerReference: true
+        manifest: |
+          apiVersion: monitoring.coreos.com/v1
+          kind: ServiceMonitor
+          metadata:
+            generateName: metrics-{{ template "aldaas.fullname" . }}-
+            labels:
+              aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+              helm: {{ template "aldaas.fullname" . }}
+          spec:
+            endpoints:
+              - port: tunnel
+                path: /metrics
+            selector:
+              matchLabels:
+                aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+                helm: {{ template "aldaas.fullname" . }}
     - name: get-last-snapshot
       container:
         name: main
@@ -112,15 +141,18 @@ spec:
             generateName: app-{{ template "aldaas.fullname" . }}-
             labels:
               aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+              helm: {{ template "aldaas.fullname" . }}
           spec:
             replicas: 1
             selector:
               matchLabels:
                 aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+                helm: {{ template "aldaas.fullname" . }}
             template:
               metadata:
                 labels:
                   aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+                  helm: {{ template "aldaas.fullname" . }}
               spec:
                 containers:
                   - imagePullPolicy: Always
@@ -187,6 +219,7 @@ spec:
             generateName: svc-{{ template "aldaas.fullname" . }}-
             labels:
               aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+              helm: {{ template "aldaas.fullname" . }}
           spec:
             ports:
               - port: {{ .Values.application.port }}
@@ -199,6 +232,7 @@ spec:
                 targetPort: {{ .Values.tunnel.port }}
             selector:
               aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+              helm: {{ template "aldaas.fullname" . }}
             sessionAffinity: None
             type: ClusterIP
       outputs:
@@ -221,6 +255,7 @@ spec:
             generateName: ingress-{{ template "aldaas.fullname" . }}-
             labels:
               aldaas: '{{`{{inputs.parameters.pvc-name}}`}}'
+              helm: {{ template "aldaas.fullname" . }}
           spec:
             rules:
               - host: {{ .Values.domain }}

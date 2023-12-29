@@ -157,7 +157,9 @@ spec:
                     {{- end }}
                   - imagePullPolicy: Always
                     name: tunnel
-                    image: "{{ .Values.tunnel.image }}:{{ .Values.tunnel.tag }}"  
+                    image: "{{ .Values.tunnel.image }}:{{ .Values.tunnel.tag }}" 
+                    command:
+                     - tcp-over-websocket
                     args:
                      - server
                      - -listen_ws

@@ -25,6 +25,9 @@ helm:
         - key: "node-role.kubernetes.io/etcd"
           operator: "Exists"
     controller:
+      extraEnv:
+      - name: DEFAULT_REQUEUE_TIME
+        value: 1s
       resources:
         requests:
           memory: "256Mi"

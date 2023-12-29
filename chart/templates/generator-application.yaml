@@ -8,6 +8,11 @@ spec:
   entrypoint: init
   templates:
     - name: init
+      outputs:
+          parameters:
+            - name: "ingress"
+              valueFrom:
+                parameter: '{{`{{steps.create-ingress.outputs.host}}`}}{{`{{steps.create-ingress.outputs.path}}`}}'
       steps:
         - - name: get-last-snapshot
             template: get-last-snapshot
@@ -211,6 +216,14 @@ spec:
         parameters:
           - name: pvc-name
           - name: service-name
+      outputs:
+        parameters:
+          - name: host
+            valueFrom:
+              jsonPath: '{{`{.spec.rules[0].host}`}}'
+          - name: path
+            valueFrom:
+              jsonPath: '{{`{.spec.rules[0].http.paths[0].path}`}}'
       resource:
         action: create
         setOwnerReference: true

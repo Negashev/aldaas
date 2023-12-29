@@ -13,6 +13,10 @@ spec:
             template: get-last-snapshot
         - - name: create-pvc-from-snapshot
             template: create-pvc-from-snapshot
+            arguments:
+              parameters:
+              - name: snap-name
+                value: '{{`{{steps.get-last-snapshot.outputs.result}}`}}'
         - - name: create-deploment
             template: create-deploment
           - name: create-service

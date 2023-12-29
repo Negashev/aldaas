@@ -1,0 +1,9 @@
+defaultNamespace: cattle-monitoring-system
+
+labels:
+  aldaas: rancher-monitoring-crd
+
+helm:
+  releaseName: rancher-monitoring-crd
+  chart: rancher-monitoring-crd
+  repo: https://charts.rancher.io

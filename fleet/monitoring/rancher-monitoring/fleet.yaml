@@ -1,0 +1,89 @@
+defaultNamespace: cattle-monitoring-system
+
+targetCustomizations:
+- name: rke2
+  helm:
+    values:
+      rke2ControllerManager:
+        enabled: true
+      rke2Etcd:
+        enabled: true
+      rke2Proxy:
+        enabled: true
+      rke2Scheduler:
+        enabled: true
+  clusterSelector:
+    matchLabels:
+      provider.cattle.io: rke2
+- name: k3s
+  helm:
+    values:
+      k3sControllerManager:
+        enabled: true
+      k3sScheduler:
+        enabled: true
+      k3sProxy:
+        enabled: true
+      k3sServer:
+        enabled: true
+  clusterSelector:
+    matchLabels:
+      provider.cattle.io: k3s
+
+dependsOn:
+  - selector:
+      matchLabels:
+        aldaas: rancher-monitoring-crd
+
+diff:
+  comparePatches:
+  - apiVersion: admissionregistration.k8s.io/v1
+    kind: MutatingWebhookConfiguration
+    name: rancher-monitoring-admission
+    operations:
+    - {"op": "remove", "path": "/webhooks"}
+  - apiVersion: admissionregistration.k8s.io/v1
+    kind: ValidatingWebhookConfiguration
+    name: rancher-monitoring-admission
+    operations:
+    - {"op": "remove", "path": "/webhooks"}
+
+helm:
+  releaseName: rancher-monitoring
+  repo: https://charts.rancher.io
+  chart: rancher-monitoring
+  values:
+    global:
+      cattle:
+        clusterId: global.fleet.clusterLabels.management.cattle.io/cluster-name
+        clusterName: global.fleet.clusterLabels.management.cattle.io/cluster-display-name
+    kubeApiServer:
+      enabled: false
+    kubeEtcd:
+      enabled: false
+    kubeControllerManager:
+      enabled: false
+    kubeScheduler:
+      enabled: false
+    prometheus:
+        prometheusSpec:
+            scrapeInterval: 10s
+            evaluationInterval: 10s
+            retention: 14d
+            retentionSize: 20GB
+            resources:
+              limits:
+                cpu: 1000m
+                memory: 3Gi
+              requests:
+                cpu: 500m
+                memory: 3Gi
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 25Gi
+                  volumeMode: Filesystem

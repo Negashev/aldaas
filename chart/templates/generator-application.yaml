@@ -12,7 +12,7 @@ spec:
           parameters:
             - name: "ingress"
               valueFrom:
-                parameter: '{{`{{steps.create-ingress.outputs.host}}`}}{{`{{steps.create-ingress.outputs.path}}`}}'
+                parameter: '{{`{{steps.create-ingress.outputs.parameters.host}}`}}{{`{{steps.create-ingress.outputs.parameters.path}}`}}'
       steps:
         - - name: get-last-snapshot
             template: get-last-snapshot

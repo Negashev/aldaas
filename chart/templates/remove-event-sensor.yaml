@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: remove-{{ template "aldaas.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  dependencies:
+    - eventName: remove
+      eventSourceName: remove-{{ template "aldaas.fullname" . }}
+      name: remove-dep
+  template:
+    serviceAccountName: {{ .Values.serviceAccountName }}
+  triggers:
+    - retryStrategy:
+        steps: 3
+      template:
+        name: {{ template "aldaas.fullname" . }}-pod-remove
+        k8s:
+          operation: create
+          source:
+            resource:
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                generateName: remove-{{ template "aldaas.fullname" . }}-
+              spec:
+                containers:
+                  - name: remove-container
+                    image: rancher/kubectl:{{ .Values.kubectl }}
+                    command:
+                      - kubectl
+                    args:
+                      - -n
+                      - {{ .Release.Namespace }}
+                      - delete
+                      - workflows
+                      - THIS_WILL_BE_REPLACED
+          parameters:
+            - src:
+                dependencyName: remove-dep
+                dataKey: wf
+              dest: spec.containers.0.args.4

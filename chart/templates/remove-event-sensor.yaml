@@ -11,9 +11,7 @@ spec:
   template:
     serviceAccountName: {{ .Values.serviceAccountName }}
   triggers:
-    - retryStrategy:
-        steps: 3
-      template:
+    - template:
         name: {{ template "aldaas.fullname" . }}-pod-remove
         k8s:
           operation: create

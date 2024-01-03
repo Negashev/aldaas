@@ -86,6 +86,12 @@ spec:
                               parameters:
                                 - name: snap-name
                                   value: '{{`{{inputs.parameters.snap-name}}`}}'
+                      -   name: remove-check-snaphot
+                          template: remove-check-snaphot
+                          arguments:
+                              parameters:
+                                - name: pvc-name
+                                  value: '{{`{{steps.create-check-snaphot.outputs.parameters.pvc-name-from-snap}}`}}'
                   - name: load-backup
                     outputs:
                       parameters:
@@ -113,6 +119,19 @@ spec:
                               parameters:
                                 - name: db-ip
                                   value: '{{`{{steps.db-for-prepare-aldaas.ip}}`}}'
+                  - name: remove-check-snaphot
+                    inputs:
+                      parameters:
+                        - name: pvc-name
+                    container:
+                      image: rancher/kubectl:{{ .Values.kubectl }}
+                      command:
+                        - kubectl
+                      args:
+                        - -n
+                        - {{ .Release.Namespace }}
+                        - pvc
+                        - '{{`{{inputs.parameters.pvc-name}}`}}'
                   - name: set-status-snapshot
                     inputs:
                       parameters:

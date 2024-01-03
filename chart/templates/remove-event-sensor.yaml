@@ -24,6 +24,7 @@ spec:
               metadata:
                 generateName: remove-{{ template "aldaas.fullname" . }}-
               spec:
+                serviceAccountName: {{ .Values.serviceAccountName }}
                 containers:
                   - name: remove-container
                     image: rancher/kubectl:{{ .Values.kubectl }}

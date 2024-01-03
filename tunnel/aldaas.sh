@@ -2,6 +2,7 @@
 ALDAAS_PROTOCOL="${ALDAAS_PROTOCOL:-wss}"
 ALDAAS_SERVER="${ALDAAS_SERVER:-$ARGO_SERVER}"
 ALDAAS_PORT="${ALDAAS_PORT:-5432}"
+ALDAAS_TTL="${ALDAAS_TTL:-300}"
 
 aldaas_name=""
 # check save
@@ -20,7 +21,7 @@ fi
 
 # if no save create new aldaas wf
 if [[ -z $aldaas_name ]]; then
-    aldaas_name=`argo submit --from workflowtemplate/$ALDAAS_NAME -o name`
+    aldaas_name=`argo submit --from workflowtemplate/$ALDAAS_NAME -p ttl=$ALDAAS_TTL -o name`
     argo watch $aldaas_name
     echo $aldaas_name > $FILE
 fi

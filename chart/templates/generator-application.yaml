@@ -6,6 +6,10 @@ metadata:
 spec:
   serviceAccountName: {{ .Values.serviceAccountName }}
   entrypoint: init
+  arguments:
+    parameters:
+    - name: ttl
+      value: 300
   templates:
     - name: init
       steps:
@@ -171,11 +175,13 @@ spec:
                     env:
                       - name: WORKFLOW_NAME
                         value: '{{`{{workflow.name}}`}}'
+                      - name: ALDAAS_TTL
+                        value: '{{`{{workflow.parameters.ttl}}`}}'
                     command:
                     - sh
                     - -c
                     args:
-                    - pip install prometheus_client requests && python3 -u /script/run.py && sleep infinity
+                    - pip install prometheus_client requests && python3 -u /script/run.py
                     volumeMounts:
                       - name: python-uptime-script
                         mountPath: /script

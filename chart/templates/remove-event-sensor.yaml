@@ -17,26 +17,30 @@ spec:
           operation: create
           source:
             resource:
-              apiVersion: v1
-              kind: Pod
+              apiVersion: batch/v1
+              kind: Job
               metadata:
                 generateName: remove-{{ template "aldaas.fullname" . }}-
               spec:
-                serviceAccountName: {{ .Values.serviceAccountName }}
-                containers:
-                  - name: remove-container
-                    image: rancher/kubectl:{{ .Values.kubectl }}
-                    command:
-                      - kubectl
-                    args:
-                      - -n
-                      - {{ .Release.Namespace }}
-                      - delete
-                      - --ignore-not-found=true
-                      - workflows
-                      - THIS_WILL_BE_REPLACED
+                ttlSecondsAfterFinished: 100
+                template:
+                  spec:
+                    serviceAccountName: {{ .Values.serviceAccountName }}
+                    restartPolicy: Never
+                    containers:
+                      - name: remove-container
+                        image: rancher/kubectl:{{ .Values.kubectl }}
+                        command:
+                          - kubectl
+                        args:
+                          - -n
+                          - {{ .Release.Namespace }}
+                          - delete
+                          - --ignore-not-found
+                          - workflows
+                          - THIS_WILL_BE_REPLACED
           parameters:
             - src:
                 dependencyName: remove-dep
                 dataKey: body.wf
-              dest: spec.containers.0.args.5
+              dest: spec.template.spec.containers.0.args.5

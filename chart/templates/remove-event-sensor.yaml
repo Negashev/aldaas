@@ -38,5 +38,5 @@ spec:
           parameters:
             - src:
                 dependencyName: remove-dep
-                dataKey: wf
+                dataKey: body.wf
               dest: spec.containers.0.args.4

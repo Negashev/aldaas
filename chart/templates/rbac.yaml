@@ -41,6 +41,12 @@ rules:
       - servicemonitors
     verbs:
       - "*"
+  - apiGroups:
+      - ""
+    verbs:
+      - "*"
+    resources:
+      - pods
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

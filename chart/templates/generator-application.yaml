@@ -25,8 +25,6 @@ spec:
             template: create-deploment
           - name: create-service
             template: create-service
-          - name: create-metrics
-            template: create-metrics
           - name: create-ingress
             template: create-ingress
           - name: wait-service
@@ -39,26 +37,6 @@ spec:
           - sh
           - -c
         image: alpine
-    - name: create-metrics
-      resource:
-        action: create
-        setOwnerReference: true
-        manifest: |
-          apiVersion: monitoring.coreos.com/v1
-          kind: ServiceMonitor
-          metadata:
-            name: '{{`{{workflow.name}}`}}'
-            labels:
-              aldaas: '{{`{{workflow.name}}`}}'
-              helm: {{ template "aldaas.fullname" . }}
-          spec:
-            endpoints:
-              - port: tunnel
-                path: /metrics
-            selector:
-              matchLabels:
-                aldaas: '{{`{{workflow.name}}`}}'
-                helm: {{ template "aldaas.fullname" . }}
     - name: get-last-snapshot
       container:
         name: main

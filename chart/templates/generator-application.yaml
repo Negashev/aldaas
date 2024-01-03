@@ -168,6 +168,9 @@ spec:
                   - imagePullPolicy: Always
                     name: uptime
                     image: python:alpine
+                    env:
+                      - name: WORKFLOW_NAME
+                        value: '{{`{{workflow.name}}`}}'
                     command:
                     - sh
                     - -c

@@ -8,9 +8,22 @@ data:
     from prometheus_client.parser import text_string_to_metric_families
     import requests
     import time
+    import os
+    ALDAAS_TTL = int(os.getenv('ALDAAS_TTL','300'))
+    WORKFLOW_NAME = os.getenv("WORKFLOW_NAME")
+    ttl_time = ALDAAS_TTL
     while True:
       metrics = requests.get("http://0.0.0.0:{{ .Values.tunnel.port }}/metrics").content
-      for family in text_string_to_metric_families(metrics):
+      for family in text_string_to_metric_families(metrics.decode("utf-8")):
         for sample in family.samples:
-          print("Name: {0} Labels: {1} Value: {2}".format(*sample))
-      time.sleep(5)
+          if sample[0] == 'http_to_tcp_active_connections':
+            # if not connections
+            if sample[2] == 0.0:
+              ttl_time = ttl_time - 1
+            else:
+              ttl_time = ALDAAS_TTL
+      time.sleep(1)
+      print('TTL time = ', ttl_time)
+      if ttl_time < 0:
+        print('kill ', WORKFLOW_NAME)
+        requests.post("http://remove-{{ template "aldaas.fullname" . }}-eventsource-svc:12000/remove", json={"wf": WORKFLOW_NAME})

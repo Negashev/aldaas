@@ -32,10 +32,11 @@ spec:
                       - -n
                       - {{ .Release.Namespace }}
                       - delete
+                      - --ignore-not-found=true
                       - workflows
                       - THIS_WILL_BE_REPLACED
           parameters:
             - src:
                 dependencyName: remove-dep
                 dataKey: body.wf
-              dest: spec.containers.0.args.4
+              dest: spec.containers.0.args.5

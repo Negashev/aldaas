@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: uptime-{{ template "aldaas.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+data:
+  run.py: |
+    print('hello world')

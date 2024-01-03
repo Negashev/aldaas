@@ -16,4 +16,4 @@ COPY --from=builder /go/bin/tcp-over-websocket /bin/tcp-over-websocket
 COPY --from=argo /argo-linux-amd64 /bin/argo
 COPY --from=argo /aldaas /bin/aldaas
 # Run the binary.
-ENTRYPOINT ["/bin/tcp-over-websocket"]
+ENTRYPOINT ["/bin/aldaas"]

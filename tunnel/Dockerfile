@@ -11,6 +11,7 @@ ADD aldaas.sh /aldaas
 RUN chmod +x /aldaas
 
 FROM alpine as aldaas
+RUN apk add --update curl
 # Copy our static executable.
 COPY --from=builder /go/bin/tcp-over-websocket /bin/tcp-over-websocket
 COPY --from=argo /argo-linux-amd64 /bin/argo

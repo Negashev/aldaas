@@ -27,3 +27,4 @@ data:
       if ttl_time < 0:
         print('kill ', WORKFLOW_NAME)
         requests.post("http://remove-{{ template "aldaas.fullname" . }}-eventsource-svc:12000/remove", json={"wf": WORKFLOW_NAME})
+        time.sleep(300)

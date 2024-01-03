@@ -25,4 +25,6 @@ if [[ -z $aldaas_name ]]; then
     echo $aldaas_name > $FILE
 fi
 
+nohup sh -c "while true; do curl --connect-timeout 3600 -vv telnet://0.0.0.0:$ALDAAS_PORT; sleep 0.1; done" > /dev/null 2>&1 &
+
 tcp-over-websocket  client -listen_tcp 0.0.0.0:$ALDAAS_PORT -connect_ws "$ALDAAS_PROTOCOL://$ALDAAS_SERVER/$ALDAAS_NAME/$ALDAAS_TOKEN/$aldaas_name"

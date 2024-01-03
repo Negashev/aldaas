@@ -57,10 +57,21 @@ spec:
                             parameters:
                               - name: snap-name
                                 value: '{{`{{steps.create-snaphot.outputs.parameters.snap-name}}`}}'
+                      - - name: remove-check-snaphot
+                          template: remove-check-snaphot
+                          arguments:
+                              parameters:
+                                - name: pvc-name
+                                  value: '{{`{{steps.check-snaphot.outputs.parameters.pvc-name-from-snap}}`}}'
                   - name: check-snaphot
                     inputs:
                       parameters:
                         - name: snap-name
+                    outputs:
+                      parameters:
+                        - name: pvc-name-from-snap
+                          valueFrom:
+                            parameter: '{{`{{steps.create-check-snaphot.outputs.parameters.pvc-name-from-snap}}`}}'
                     steps:
                       - - name: create-check-snaphot
                           template: create-check-snaphot
@@ -86,12 +97,6 @@ spec:
                               parameters:
                                 - name: snap-name
                                   value: '{{`{{inputs.parameters.snap-name}}`}}'
-                        - name: remove-check-snaphot
-                          template: remove-check-snaphot
-                          arguments:
-                              parameters:
-                                - name: pvc-name
-                                  value: '{{`{{steps.create-check-snaphot.outputs.parameters.pvc-name-from-snap}}`}}'
                   - name: load-backup
                     outputs:
                       parameters:

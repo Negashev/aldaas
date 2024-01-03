@@ -130,6 +130,7 @@ spec:
                       args:
                         - -n
                         - {{ .Release.Namespace }}
+                        - delete
                         - pvc
                         - '{{`{{inputs.parameters.pvc-name}}`}}'
                   - name: set-status-snapshot

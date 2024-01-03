@@ -86,7 +86,7 @@ spec:
                               parameters:
                                 - name: snap-name
                                   value: '{{`{{inputs.parameters.snap-name}}`}}'
-                      -   name: remove-check-snaphot
+                        - name: remove-check-snaphot
                           template: remove-check-snaphot
                           arguments:
                               parameters:

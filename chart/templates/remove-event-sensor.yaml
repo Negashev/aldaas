@@ -22,7 +22,7 @@ spec:
               metadata:
                 generateName: remove-{{ template "aldaas.fullname" . }}-
               spec:
-                ttlSecondsAfterFinished: 100
+                ttlSecondsAfterFinished: 10
                 template:
                   spec:
                     serviceAccountName: {{ .Values.serviceAccountName }}

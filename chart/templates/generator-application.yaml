@@ -172,16 +172,7 @@ spec:
                     - sh
                     - -c
                     args:
-                    - pip
-                    - install
-                    - prometheus_client
-                    - requests 
-                    - &&
-                    - python
-                    - /script/run.py
-                    - &&
-                    - sleep
-                    - infinity
+                    - pip install prometheus_client requests && python3 /script/run.py && sleep infinity
                     volumeMounts:
                       - name: python-uptime-script
                         mountPath: /script

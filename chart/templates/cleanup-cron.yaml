@@ -42,4 +42,4 @@ spec:
       secondsAfterCompletion: 300
     podGC:
       strategy: OnPodCompletion
-  schedule: '* * * * *'
+  schedule: '*/10 * * * *'

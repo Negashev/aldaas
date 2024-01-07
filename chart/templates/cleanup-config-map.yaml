@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cleanup-{{ template "aldaas.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+data:
+  cleanup.sh: |
+    #!/bin/sh
+    # inline remove one old workflow by volumesnapshots and stay latest
+    kubectl delete -n {{ .Release.Namespace }} workflow --ignore-not-found `kubectl -n aldaas get volumesnapshots -l status=ready,aldaas={{ template "aldaas.fullname" . }} --sort-by=.metadata.creationTimestamp -o json | jq -r '.items | group_by(.metadata.creationTimestamp) | map({"timestamp": .[0].metadata.creationTimestamp, "workflow": .[0].metadata.labels.backup}) | reverse | .[1:] | .[-1].workflow'`

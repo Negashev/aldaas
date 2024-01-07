@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: cleanup-{{ template "aldaas.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  workflowSpec:
+    templates:
+      - name: cleanup-backups
+        container:
+          name: cleanup-backups
+          image: rancher/kubectl:{{ .Values.kubectl }}
+          command:
+            - sh
+          args:
+            - /script/cleanup.sh
+          resources: {}
+          volumeMounts:
+            - name: cleanup-script
+              mountPath: /script
+    volumes:
+      - name: cleanup-script
+        configMap:
+          name: cleanup-{{ template "aldaas.fullname" . }}
+    entrypoint: cleanup-backups
+    arguments: {}
+    ttlStrategy:
+      secondsAfterCompletion: 300
+    podGC:
+      strategy: OnPodCompletion
+  schedule: '* * * * *'

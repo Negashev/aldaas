@@ -1,6 +1,7 @@
 # SA from argo (add some rbac) 
 serviceAccountName: argo-workflow
 kubectl: v1.27.9
+jq: 1.7.1
 # create argo event bus with default name in NS for aldaas
 EventBus:
   enabled: true

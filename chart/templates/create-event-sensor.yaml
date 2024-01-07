@@ -228,7 +228,7 @@ spec:
                           generateName: snap-{{ template "aldaas.fullname" . }}-
                           labels:
                             status: check
-                            backup: '{{`{{inputs.parameters.pvc-name}}`}}'
+                            backup: '{{`{{workflow.name}}`}}'
                             aldaas: {{ template "aldaas.fullname" . }}
                         spec:
                           volumeSnapshotClassName: {{ .Values.rook.volumeSnapshotClassName }}

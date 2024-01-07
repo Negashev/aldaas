@@ -52,7 +52,7 @@ spec:
           - status=ready,aldaas={{ template "aldaas.fullname" . }}
           - --sort-by=.metadata.creationTimestamp
           - -o
-          - jsonpath={.items[0].metadata.name}
+          - jsonpath={.items[-1].metadata.name}
     - name: create-pvc-from-snapshot
       inputs:
         parameters:

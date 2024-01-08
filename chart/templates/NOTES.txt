@@ -1,8 +1,9 @@
 Aldaas has been installed.
 
-Check your ARGO workflow ARGO_SERVER
 
-for client
+Check your ARGO workflow ARGO_SERVER and run on client side
+
+
 ```
 docker run -it \
 -p {{ .Values.application.port }}:{{ .Values.application.port }} \
@@ -12,11 +13,14 @@ docker run -it \
 -e ARGO_SERVER=argo.workflow.sever:443 \
 -e ARGO_HTTP1=true \
 -e ARGO_TOKEN='[REDACTED]' \
--e ARGO_NAMESPACE={{ .Release.Namespace }}
+-e ARGO_NAMESPACE={{ .Release.Namespace }} \
+ghcr.io/negashev/aldaas:main
 ```
 
 add `-e ARGO_SECURE=false` if argo no tls
 
+
 if argo and aldaas need in different domains use ARGO_SERVER and ALDAAS_SERVER
+
 
 Happy Databases Testing!

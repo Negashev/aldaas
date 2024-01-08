@@ -1,0 +1,22 @@
+Aldaas has been installed.
+
+Check your ARGO workflow ARGO_SERVER
+
+for client
+```
+docker run -it \
+-p {{ .Values.application.port }}:{{ .Values.application.port }} \
+-e ALDAAS_PORT={{ .Values.application.port }} \
+-e ALDAAS_NAME={{ template "aldaas.fullname" . }} \
+-e ALDAAS_TOKEN={{ .Values.tunnel.token }} \
+-e ARGO_SERVER=argo.workflow.sever:443 \
+-e ARGO_HTTP1=true \
+-e ARGO_TOKEN='[REDACTED]' \
+-e ARGO_NAMESPACE={{ .Release.Namespace }}
+```
+
+add `-e ARGO_SECURE=false` if argo no tls
+
+if argo and aldaas need in different domains use ARGO_SERVER and ALDAAS_SERVER
+
+Happy Databases Testing!

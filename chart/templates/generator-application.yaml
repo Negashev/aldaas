@@ -209,6 +209,10 @@ spec:
             labels:
               aldaas: '{{`{{workflow.name}}`}}'
               helm: {{ template "aldaas.fullname" . }}
+            annotations:
+            {{- range $key, $value := .Values.tunnel.ingress.annotations }}
+              {{ $key }}: {{ $value | quote }}
+            {{- end }}
           spec:
             rules:
               - host: {{ .Values.domain }}
@@ -221,3 +225,9 @@ spec:
                             number: {{ .Values.tunnel.port }}
                       path: /{{ template "aldaas.fullname" . }}/{{ .Values.tunnel.token }}/{{`{{workflow.name}}`}}
                       pathType: Prefix
+          {{- if .Values.tunnel.ingress.tlsSecretName }}
+            tls:
+            - hosts:
+              - {{ .Values.domain }}
+              secretName: {{ .Values.tunnel.ingress.tlsSecretName }}
+          {{- end }}

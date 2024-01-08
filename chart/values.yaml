@@ -13,6 +13,10 @@ tunnel:
   port: 8080
   # set some random for your aldaas instance
   token: 9fKLQhjGWrHZ3pOSQLKmWlUxoJXkCJqbFs8WeT3EEG8AwKEL4B8YavzXYOApVaXfi2ZVLx77YhsbVyDJTY0l8maSiYKEm6WDyopM
+  ingress:
+    tlsSecretName: ""
+    annotations: 
+      # kubernetes.io/tls-acme: "true"
 rook:
   storageClassName: ceph-block
   volumeSnapshotClassName: ceph-block

@@ -1,7 +1,11 @@
 # aldaas
-**A**pp with **L**arge **D**ata **a**s **a** **s**ervice
+**A**pp with **L**arge **D**ata **a**s **a** **s**ervice - lifts a copy of the database from backups, and through a light proxy gives access to temporary databases and deletes these databases it it's not use.
 
 ![Aldaas for everythink](aldaas.jpg?raw=true "Aldaas")
+
+### motivation
+Your developers need a production-like database - to rollout their migrations or testing, but so that the developer databases do not overlap, besides, it takes a very long time for each developer to download a heavy database to their computer, sometimes it is tens of gigabytes, it is also necessary for CI/CD pipelines. 
+
 
 ### how it works
 - rook.io snapshots!

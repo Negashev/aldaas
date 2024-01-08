@@ -10,7 +10,7 @@ docker run -it \
 -e ALDAAS_PORT={{ .Values.application.port }} \
 -e ALDAAS_NAME={{ template "aldaas.fullname" . }} \
 -e ALDAAS_TOKEN={{ .Values.tunnel.token }} \
--e ARGO_SERVER=argo.workflow.sever:443 \
+-e ARGO_SERVER={{ .Values.domain }} \
 -e ARGO_HTTP1=true \
 -e ARGO_TOKEN='[REDACTED]' \
 -e ARGO_NAMESPACE={{ .Release.Namespace }} \

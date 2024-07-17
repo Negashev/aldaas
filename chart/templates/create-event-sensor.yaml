@@ -331,7 +331,7 @@ spec:
                       - name: database-object
                         path: /backup.sql.gz
                         s3:
-                          endpoint: "{{.Values.s3.host}}:{{.Values.s3.post}}"
+                          endpoint: "{{.Values.s3.host}}:{{.Values.s3.port}}"
                           bucket: "{{ .Values.s3.bucket}}"
                           key: '{{`{{workflow.parameters.db-file}}`}}'
                           insecure: {{ .Values.s3.insecure}}

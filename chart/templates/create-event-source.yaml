@@ -8,7 +8,7 @@ spec:
     backup:
       bucket:
         name: "{{ .Values.s3.bucket}}"
-      endpoint: "{{.Values.s3.host}}:{{.Values.s3.post}}"
+      endpoint: "{{.Values.s3.host}}:{{.Values.s3.port}}"
       events:
         - s3:ObjectCreated:Put
       insecure: {{.Values.s3.insecure}}

@@ -1,23 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: EventSource
 metadata:
-  name: minio-{{ template "aldaas.fullname" . }}
+  name: s3-{{ template "aldaas.fullname" . }}
   namespace: {{ .Release.Namespace }}
 spec:
-  minio:
+  sqs:
     backup:
-      bucket:
-        name: "{{ .Values.s3.bucket}}"
-      endpoint: "{{.Values.s3.host}}:{{.Values.s3.port}}"
-      events:
-        - s3:ObjectCreated:Put
-      insecure: {{.Values.s3.insecure}}
+      region: {{ .Values.s3.region | default "eu-central-1" }}
+      queue: {{ .Values.s3.sqsQueue | default "aldaas-s3-backup-events" }}
+      waitTimeSeconds: 20
       accessKey:
         key: accesskey
-        name: {{ template "s3.credentials" . }} 
+        name: {{ .Values.s3.sqsSecret | default "aldaas-sqs-events" }}
       secretKey:
         key: secretkey
-        name: {{ template "s3.credentials" . }} 
-      filter:
-        prefix: "{{.Values.s3.prefix}}"
-        suffix: "{{.Values.s3.suffix}}"
+        name: {{ .Values.s3.sqsSecret | default "aldaas-sqs-events" }}

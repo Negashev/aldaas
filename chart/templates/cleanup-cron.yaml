@@ -11,13 +11,13 @@ spec:
           artifacts:
             - name: kubectl
               path: /bin/kubectl
-              mode: 755
+              mode: 493
               http:
                 url: >-
                   https://storage.googleapis.com/kubernetes-release/release/{{ .Values.kubectl }}/bin/linux/amd64/kubectl
             - name: jq
               path: /bin/jq
-              mode: 755
+              mode: 493
               http:
                 url: >-
                   https://github.com/jqlang/jq/releases/download/jq-{{ .Values.jq }}/jq-linux-amd64
@@ -42,4 +42,5 @@ spec:
       secondsAfterCompletion: 300
     podGC:
       strategy: OnPodCompletion
-  schedule: '*/10 * * * *'
+  schedules:
+    - '*/10 * * * *'

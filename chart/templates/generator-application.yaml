@@ -9,7 +9,7 @@ spec:
   arguments:
     parameters:
     - name: ttl
-      value: 300
+      value: "300"
   templates:
     - name: init
       steps:

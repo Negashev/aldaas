@@ -8,10 +8,8 @@ spec:
     - eventName: backup
       eventSourceName: s3-{{ template "aldaas.fullname" . }}
       name: s3-dep
-      dataTemplate: |
-        {{`{{ $msg := fromJson (toString .Input.body) }}
-        {{ $key := index $msg.Records 0 | index .s3.object.key }}
-        {{ toJson (dict "s3key" $key) }}`}}
+      transform:
+        jq: '{body: (.body | @base64d | fromjson | .Records[0].s3.object.key)}'
   template:
     serviceAccountName: {{ .Values.serviceAccountName }}
   triggers:
@@ -24,7 +22,7 @@ spec:
           parameters:
             - dest: spec.arguments.parameters.0.value
               src:
-                dataKey: s3key
+                dataKey: body
                 dependencyName: s3-dep
           source:
             resource:

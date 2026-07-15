@@ -176,6 +176,10 @@ spec:
                       env:
                         - name: ALDAAS_HOST_DAEMON
                           value: '{{`{{inputs.parameters.db-ip}}`}}'
+                        {{- if .Values.check.pgSslMode }}
+                        - name: PGSSLMODE
+                          value: {{ .Values.check.pgSslMode }}
+                        {{- end }}
                         {{- range .Values.restore.env }}
                         - name: {{ .name }}
                           value: {{ .value }}

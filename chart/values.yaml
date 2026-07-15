@@ -80,3 +80,6 @@ check:
   command:
    - sh
    - -c
+  # pgSslMode: "" — пусто = не добавлять PGSSLMODE
+  # pgSslMode: "disable" — добавить PGSSLMODE=disable
+  pgSslMode: ""

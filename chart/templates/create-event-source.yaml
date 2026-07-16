@@ -4,6 +4,12 @@ metadata:
   name: s3-{{ template "aldaas.fullname" . }}
   namespace: {{ .Release.Namespace }}
 spec:
+  template:
+    container:
+      {{- with .Values.eventsource.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
   sqs:
     backup:
       region: {{ .Values.s3.region | default "eu-central-1" }}

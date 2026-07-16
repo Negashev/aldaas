@@ -83,3 +83,21 @@ check:
   # pgSslMode: "" — пусто = не добавлять PGSSLMODE
   # pgSslMode: "disable" — добавить PGSSLMODE=disable
   pgSslMode: ""
+
+# resources for EventSource pods (SQS polling, webhook)
+eventsource:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 128Mi
+
+# resources for Sensor pods (workflow triggers)
+sensor:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 128Mi

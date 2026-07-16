@@ -4,6 +4,12 @@ metadata:
   name: remove-{{ template "aldaas.fullname" . }}
   namespace: {{ .Release.Namespace }}
 spec:
+  template:
+    container:
+      {{- with .Values.eventsource.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
   service:
     ports:
       - port: 12000

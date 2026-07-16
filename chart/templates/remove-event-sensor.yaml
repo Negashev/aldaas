@@ -10,6 +10,11 @@ spec:
       name: remove-dep
   template:
     serviceAccountName: {{ .Values.serviceAccountName }}
+    container:
+      {{- with .Values.sensor.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
   triggers:
     - template:
         name: {{ template "aldaas.fullname" . }}-pod-remove

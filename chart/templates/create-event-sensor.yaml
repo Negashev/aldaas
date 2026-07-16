@@ -12,6 +12,11 @@ spec:
         jq: '{body: (.body | @base64d | fromjson | .Records[0].s3.object.key)}'
   template:
     serviceAccountName: {{ .Values.serviceAccountName }}
+    container:
+      {{- with .Values.sensor.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
   triggers:
     - retryStrategy:
         steps: 3

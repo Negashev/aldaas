@@ -6,6 +6,8 @@ metadata:
 spec:
   serviceAccountName: {{ .Values.serviceAccountName }}
   entrypoint: init
+  ttlStrategy:
+    secondsAfterCompletion: 3600
   arguments:
     parameters:
     - name: ttl
@@ -29,6 +31,8 @@ spec:
             template: create-ingress
           - name: wait-service
             template: wait-service
+        - - name: cleanup-pvc
+            template: cleanup-pvc
     - name: wait-service
       container:
         args:
@@ -231,3 +235,15 @@ spec:
               - {{ .Values.domain }}
               secretName: {{ .Values.tunnel.ingress.tlsSecretName }}
           {{- end }}
+    - name: cleanup-pvc
+      container:
+        name: main
+        image: rancher/kubectl:{{ .Values.kubectl }}
+        command:
+          - sh
+          - -c
+        args:
+          - >-
+            sleep 360
+            && kubectl -n {{ .Release.Namespace }} patch pvc {{`{{workflow.name}}`}} -p '{"metadata":{"finalizers":[]}}' 2>/dev/null || true
+            && kubectl -n {{ .Release.Namespace }} delete pvc {{`{{workflow.name}}`}} --ignore-not-found=true || true

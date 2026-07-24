@@ -238,7 +238,7 @@ spec:
     - name: cleanup-pvc
       container:
         name: main
-        image: rancher/kubectl:{{ .Values.kubectl }}
+        image: bitnami/kubectl:{{ .Values.kubectl }}
         command:
           - sh
           - -c

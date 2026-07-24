@@ -238,7 +238,7 @@ spec:
     - name: cleanup-pvc
       container:
         name: main
-        image: bitnami/kubectl:{{ .Values.kubectl }}
+        image: alpine/k8s:{{ .Values.kubectl }}
         command:
           - sh
           - -c

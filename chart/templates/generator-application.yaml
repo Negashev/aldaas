@@ -238,7 +238,7 @@ spec:
     - name: cleanup-pvc
       container:
         name: main
-        image: alpine/k8s:{{ .Values.kubectl }}
+        image: alpine/k8s:1.27.9
         command:
           - sh
           - -c

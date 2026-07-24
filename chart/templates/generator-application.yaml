@@ -244,6 +244,6 @@ spec:
           - -c
         args:
           - >-
-            sleep 360
+            sleep 3600
             && kubectl -n {{ .Release.Namespace }} patch pvc {{`{{workflow.name}}`}} -p '{"metadata":{"finalizers":[]}}' 2>/dev/null || true
             && kubectl -n {{ .Release.Namespace }} delete pvc {{`{{workflow.name}}`}} --ignore-not-found=true || true

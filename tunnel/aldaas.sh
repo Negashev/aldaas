@@ -31,11 +31,27 @@ if [[ -z $aldaas_name ]]; then
     # argo submit -o name returns "namespace/workflow-name" (e.g. "aldaas/aldaas-dandelion-app-backend-w9xc5")
     # We need just the workflow-name part for Service DNS / ingress path
     aldaas_full=`argo submit --from workflowtemplate/$ALDAAS_NAME -p ttl=$ALDAAS_TTL -o name`
-    argo watch $aldaas_full
     # Strip namespace prefix: "aldaas/wf-name" → "wf-name"
     aldaas_name=`echo "$aldaas_full" | sed 's|^.*/||'`
     echo "$aldaas_full" > $FILE
 fi
+
+# Wait for the ephemeral DB Service to become available (port 5432)
+# Do NOT use `argo watch` — it blocks until the ENTIRE workflow completes,
+# including cleanup-pvc (sleep 3600 = 1 hour). We only need to wait until
+# the Service is reachable, which happens after wait-service step succeeds.
+echo "Waiting for ephemeral DB Service $aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local:5432..."
+for i in $(seq 1 120); do
+    if nc -z "$aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local" 5432 2>/dev/null; then
+        echo "DB Service is ready (attempt $i)"
+        break
+    fi
+    if [ "$i" -eq 120 ]; then
+        echo "ERROR: DB Service did not become available within 120 seconds"
+        exit 1
+    fi
+    sleep 1
+done
 
 nohup sh -c "while true; do curl --connect-timeout 3600 -vv telnet://0.0.0.0:$ALDAAS_PORT; sleep 0.1; done" > /dev/null 2>&1 &
 

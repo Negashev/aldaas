@@ -37,9 +37,12 @@ if [[ -z $aldaas_name ]]; then
 fi
 
 # Wait for the ephemeral DB Service to become available (port 5432)
-# Do NOT use `argo watch` — it blocks until the ENTIRE workflow completes,
-# including cleanup-pvc (sleep 3600 = 1 hour). We only need to wait until
-# the Service is reachable, which happens after wait-service step succeeds.
+# We poll the Service DNS instead of using `argo watch` because:
+# 1. argo watch blocks until the ENTIRE workflow completes
+# 2. We only need to wait until the Service is reachable (after wait-service step)
+# 3. The workflow stays alive (no cleanup-pvc step) — lifecycle is managed by
+#    uptime container → remove EventSource → delete workflow → OwnerReferences
+#    cascade-delete PVC, Deployment, Service, Ingress
 echo "Waiting for ephemeral DB Service $aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local:5432..."
 for i in $(seq 1 120); do
     if nc -z "$aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local" 5432 2>/dev/null; then

@@ -3,7 +3,7 @@ FROM golang:alpine AS builder
 RUN go install github.com/trazfr/tcp-over-websocket@latest
 
 FROM alpine as argo
-ADD https://github.com/argoproj/argo-workflows/releases/download/v3.5.2/argo-linux-amd64.gz /argo-linux-amd64.gz
+ADD https://github.com/argoproj/argo-workflows/releases/download/v4.0.6/argo-linux-amd64.gz /argo-linux-amd64.gz
 RUN gunzip /argo-linux-amd64.gz
 RUN chmod +x argo-linux-amd64
 

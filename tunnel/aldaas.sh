@@ -6,6 +6,11 @@ ALDAAS_TTL="${ALDAAS_TTL:-300}"
 # with port 8080 (tunnel) + 5432 (postgres)
 ALDAAS_NAMESPACE="${ALDAAS_NAMESPACE:-aldaas}"
 
+# Connection mode: "internal" (Service DNS, default) or "external" (ingress wss://)
+# - internal: ws://<wf-name>.<namespace>.svc.cluster.local:8080 (bypasses ALB 60s timeout)
+# - external: wss://<domain>/<aldaas-fullname>/<token>/<wf-name> (through ingress, for off-cluster clients)
+ALDAAS_MODE="${ALDAAS_MODE:-internal}"
+
 aldaas_name=""
 # check save
 FILE=/tmp/aldaas
@@ -23,14 +28,29 @@ fi
 
 # if no save create new aldaas wf
 if [[ -z $aldaas_name ]]; then
-    aldaas_name=`argo submit --from workflowtemplate/$ALDAAS_NAME -p ttl=$ALDAAS_TTL -o name`
-    argo watch $aldaas_name
-    echo $aldaas_name > $FILE
+    # argo submit -o name returns "namespace/workflow-name" (e.g. "aldaas/aldaas-dandelion-app-backend-w9xc5")
+    # We need just the workflow-name part for Service DNS / ingress path
+    aldaas_full=`argo submit --from workflowtemplate/$ALDAAS_NAME -p ttl=$ALDAAS_TTL -o name`
+    argo watch $aldaas_full
+    # Strip namespace prefix: "aldaas/wf-name" → "wf-name"
+    aldaas_name=`echo "$aldaas_full" | sed 's|^.*/||'`
+    echo "$aldaas_full" > $FILE
 fi
 
 nohup sh -c "while true; do curl --connect-timeout 3600 -vv telnet://0.0.0.0:$ALDAAS_PORT; sleep 0.1; done" > /dev/null 2>&1 &
 
-# Connect directly to the internal Service DNS (ws://, not wss://)
-# Bypasses AWS ALB 60s idle timeout that kills WebSocket connections
-# Service: <workflow-name>.<namespace>.svc.cluster.local:8080 (tunnel port)
-tcp-over-websocket  client -listen_tcp 0.0.0.0:$ALDAAS_PORT -connect_ws "ws://$aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local:8080"
+# Build WebSocket URL based on ALDAAS_MODE
+if [ "$ALDAAS_MODE" = "external" ]; then
+    # External mode: through ingress (wss://)
+    # URL: wss://<domain>/<aldaas-fullname>/<token>/<wf-name>
+    # Requires: ALDAAS_DOMAIN, ALDAAS_TOKEN env vars
+    WS_URL="wss://${ALDAAS_DOMAIN}/${ALDAAS_NAME}/${ALDAAS_TOKEN}/${aldaas_name}"
+    echo "Connecting (external/ingress): $WS_URL"
+else
+    # Internal mode: direct Service DNS (ws://) — bypasses ALB 60s idle timeout
+    # Service: <workflow-name>.<namespace>.svc.cluster.local:8080 (tunnel port)
+    WS_URL="ws://${aldaas_name}.${ALDAAS_NAMESPACE}.svc.cluster.local:8080"
+    echo "Connecting (internal/service-dns): $WS_URL"
+fi
+
+tcp-over-websocket  client -listen_tcp 0.0.0.0:$ALDAAS_PORT -connect_ws "$WS_URL"

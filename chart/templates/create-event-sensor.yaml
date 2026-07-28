@@ -42,7 +42,7 @@ spec:
                       value: THIS_WILL_BE_REPLACED
                 entrypoint: init
                 podGC:
-                  strategy: OnPodSuccess
+                  strategy: OnPodCompletion
                   deleteDelayDuration: 300s
                   labelSelector:
                     matchLabels:

@@ -274,7 +274,7 @@ spec:
                         should-be-deleted: "true"
                     daemon: true
                     retryStrategy:
-                      limit: "0"
+                      limit: "1"
                       retryPolicy: Always
                     container:
                       volumeMounts:

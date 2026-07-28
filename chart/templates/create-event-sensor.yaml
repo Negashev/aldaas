@@ -273,6 +273,9 @@ spec:
                       labels:
                         should-be-deleted: "true"
                     daemon: true
+                    retryStrategy:
+                      limit: "0"
+                      retryPolicy: Always
                     container:
                       volumeMounts:
                       - name: workdir

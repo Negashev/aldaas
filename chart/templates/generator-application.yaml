@@ -6,8 +6,6 @@ metadata:
 spec:
   serviceAccountName: {{ .Values.serviceAccountName }}
   entrypoint: init
-  ttlStrategy:
-    secondsAfterCompletion: 3600
   arguments:
     parameters:
     - name: ttl

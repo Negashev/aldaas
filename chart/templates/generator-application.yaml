@@ -34,11 +34,15 @@ spec:
     - name: wait-service
       container:
         args:
-          - while ! nc -z '{{`{{workflow.name}}`}}' {{ .Values.application.port }}; do sleep 1; done
+          - >-
+            while ! nc -z '{{`{{workflow.name}}`}}' {{ .Values.application.port }}; do sleep 1; done;
+            echo "TCP port ready, waiting for PostgreSQL to accept connections...";
+            until PGPASSWORD={{ .Values.application.password | default "passw0rd" }} pg_isready -h '{{`{{workflow.name}}`}}' -p {{ .Values.application.port }} -U {{ .Values.application.user | default "app" }} -d {{ .Values.application.db | default "app" }}; do sleep 2; done;
+            echo "PostgreSQL is ready to accept connections"
         command:
           - sh
           - -c
-        image: alpine
+        image: postgres:17-alpine
     - name: get-last-snapshot
       container:
         name: main

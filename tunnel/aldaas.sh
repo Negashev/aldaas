@@ -42,7 +42,7 @@ while true; do
     fi
 
     # if no save create new aldaas wf
-    if [[ -z $aldaas_name ]]; then
+    if [ -z "$aldaas_name" ]; then
         # argo submit -o name returns "namespace/workflow-name" (e.g. "aldaas/aldaas-dandelion-app-backend-w9xc5")
         # We need just the workflow-name part for Service DNS / ingress path
         aldaas_full=`argo submit --from workflowtemplate/$ALDAAS_NAME -p ttl=$ALDAAS_TTL -o name`
@@ -66,21 +66,23 @@ while true; do
     #    uptime container → remove EventSource → delete workflow → OwnerReferences
     #    cascade-delete PVC, Deployment, Service, Ingress
     echo "Waiting for ephemeral DB Service $aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local:5432..."
+    SERVICE_READY=0
     for i in $(seq 1 120); do
         if nc -z "$aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local" 5432 2>/dev/null; then
             echo "DB Service is ready (attempt $i)"
             BACKOFF=1  # reset backoff on success
+            SERVICE_READY=1
             break
-        fi
-        if [ "$i" -eq 120 ]; then
-            echo "ERROR: DB Service did not become available within 120 seconds"
-            sleep $BACKOFF
-            BACKOFF=$((BACKOFF * 2))
-            [ $BACKOFF -gt $MAX_BACKOFF ] && BACKOFF=$MAX_BACKOFF
-            continue 2  # skip to outer loop (re-provision)
         fi
         sleep 1
     done
+    if [ "$SERVICE_READY" -eq 0 ]; then
+        echo "ERROR: DB Service did not become available within 120 seconds"
+        sleep $BACKOFF
+        BACKOFF=$((BACKOFF * 2))
+        [ $BACKOFF -gt $MAX_BACKOFF ] && BACKOFF=$MAX_BACKOFF
+        continue
+    fi
 
     nohup sh -c "while true; do curl --connect-timeout 3600 -vv telnet://0.0.0.0:$ALDAAS_PORT; sleep 0.1; done" > /dev/null 2>&1 &
 

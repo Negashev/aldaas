@@ -110,13 +110,23 @@ while true; do
     # Watchdog: monitor upstream Service DNS
     # When the Argo workflow is deleted (TTL expiry / remove EventSource),
     # the Service DNS record is removed. We detect this and trigger re-provisioning.
+    # Tolerance: require N consecutive DNS failures before killing the tunnel,
+    # to avoid false positives from transient CoreDNS hiccups or network blips.
+    DNS_FAIL_COUNT=0
+    DNS_FAIL_THRESHOLD=3
     while kill -0 $TUNNEL_PID 2>/dev/null; do
         sleep 10
         if ! nslookup "$aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local" >/dev/null 2>&1; then
-            echo "Upstream Service DNS gone — re-provisioning"
-            kill $TUNNEL_PID 2>/dev/null
-            wait $TUNNEL_PID 2>/dev/null
-            break
+            DNS_FAIL_COUNT=$((DNS_FAIL_COUNT + 1))
+            echo "DNS lookup failed ($DNS_FAIL_COUNT/$DNS_FAIL_THRESHOLD) for $aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local"
+            if [ "$DNS_FAIL_COUNT" -ge "$DNS_FAIL_THRESHOLD" ]; then
+                echo "Upstream Service DNS gone after $DNS_FAIL_THRESHOLD consecutive failures — re-provisioning"
+                kill $TUNNEL_PID 2>/dev/null
+                wait $TUNNEL_PID 2>/dev/null
+                break
+            fi
+        else
+            DNS_FAIL_COUNT=0
         fi
     done
 

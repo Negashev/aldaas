@@ -24,7 +24,10 @@ while true; do
     echo "=== Re-provisioning aldaas (backoff=${BACKOFF}s) ==="
 
     # Session store: ConfigMap (K8s) or /tmp file (fallback)
-    SESSION_CM="aldaas-session-${ALDAAS_NAME}"
+    # ALDAAS_SESSION_ID makes ConfigMap unique per-deployment (e.g. 72536668-review-feature-hr-9oqso9)
+    # Falls back to ALDAAS_NAME if not set (backward compatibility, but unsafe in shared namespaces)
+    SESSION_ID="${ALDAAS_SESSION_ID:-$ALDAAS_NAME}"
+    SESSION_CM="aldaas-session-${SESSION_ID}"
     aldaas_name=""
     aldaas_full=""
 

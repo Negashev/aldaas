@@ -42,7 +42,7 @@ application:
     - sh
     - -c
     - >-
-      test -f /var/lib/postgresql/data/PG_VERSION && echo "host all all all trust" > /var/lib/postgresql/data/pg_hba.conf;
+      test -f /var/lib/postgresql/data/PG_VERSION && echo "host all all all trust" > /var/lib/postgresql/data/pg_hba.conf && sed -i 's/^ssl.*=.*on/ssl = off/' /var/lib/postgresql/data/postgresql.conf;
       shutdown_pg() { echo "[db-for-aldaas] SIGTERM received, shutting down PostgreSQL gracefully..."; pg_ctl stop -m fast -D /var/lib/postgresql/data 2>/dev/null || true; echo "[db-for-aldaas] PostgreSQL stopped cleanly"; exit 0; };
       trap 'shutdown_pg' SIGTERM SIGINT;
       docker-entrypoint.sh postgres &

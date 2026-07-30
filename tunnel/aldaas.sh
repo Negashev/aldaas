@@ -23,21 +23,38 @@ MAX_BACKOFF=30
 while true; do
     echo "=== Re-provisioning aldaas (backoff=${BACKOFF}s) ==="
 
-    # Remove saved workflow name — forces fresh argo submit
-    rm -f /tmp/aldaas
-
+    # Session store: ConfigMap (K8s) or /tmp file (fallback)
+    SESSION_CM="aldaas-session-${ALDAAS_NAME}"
     aldaas_name=""
-    # check save
-    FILE=/tmp/aldaas
-    if [ -f "$FILE" ]; then
-        echo "save file exists."
-        aldaas_name=`cat $FILE`
-        # check wf exist
-        if ! argo get $aldaas_name; then
-            aldaas_name=""
-            echo "Not found $aldaas_name"
-        else
-            echo "Use saved $aldaas_name"
+    aldaas_full=""
+
+    if [ "$K8S_SESSION_STORE" = "true" ]; then
+        # Read from ConfigMap
+        aldaas_full=$(kubectl get configmap "$SESSION_CM" -o jsonpath='{.data.workflow}' 2>/dev/null)
+        if [ -n "$aldaas_full" ]; then
+            echo "ConfigMap $SESSION_CM has saved workflow: $aldaas_full"
+            if argo get "$aldaas_full" >/dev/null 2>&1; then
+                aldaas_name=$(echo "$aldaas_full" | sed 's|^.*/||')
+                echo "Use saved $aldaas_full"
+            else
+                echo "Saved workflow not found, will re-provision"
+                aldaas_full=""
+            fi
+        fi
+    else
+        # Fallback: /tmp/aldaas file
+        rm -f /tmp/aldaas
+        FILE=/tmp/aldaas
+        if [ -f "$FILE" ]; then
+            echo "save file exists."
+            aldaas_full=$(cat $FILE)
+            if argo get "$aldaas_full" >/dev/null 2>&1; then
+                aldaas_name=$(echo "$aldaas_full" | sed 's|^.*/||')
+                echo "Use saved $aldaas_full"
+            else
+                echo "Not found $aldaas_full"
+                aldaas_full=""
+            fi
         fi
     fi
 
@@ -45,7 +62,7 @@ while true; do
     if [ -z "$aldaas_name" ]; then
         # argo submit -o name returns "namespace/workflow-name" (e.g. "aldaas/aldaas-dandelion-app-backend-w9xc5")
         # We need just the workflow-name part for Service DNS / ingress path
-        aldaas_full=`argo submit --from workflowtemplate/$ALDAAS_NAME -p ttl=$ALDAAS_TTL -o name`
+        aldaas_full=$(argo submit --from workflowtemplate/$ALDAAS_NAME -p ttl=$ALDAAS_TTL -o name)
         if [ $? -ne 0 ]; then
             echo "ERROR: argo submit failed, retrying in ${BACKOFF}s"
             sleep $BACKOFF
@@ -54,8 +71,14 @@ while true; do
             continue
         fi
         # Strip namespace prefix: "aldaas/wf-name" → "wf-name"
-        aldaas_name=`echo "$aldaas_full" | sed 's|^.*/||'`
-        echo "$aldaas_full" > $FILE
+        aldaas_name=$(echo "$aldaas_full" | sed 's|^.*/||')
+        # Save to session store
+        if [ "$K8S_SESSION_STORE" = "true" ]; then
+            kubectl create configmap "$SESSION_CM" --from-literal=workflow="$aldaas_full" --dry-run=client -o yaml | kubectl apply -f -
+            echo "Saved workflow to ConfigMap $SESSION_CM"
+        else
+            echo "$aldaas_full" > /tmp/aldaas
+        fi
     fi
 
     # Wait for the ephemeral DB Service to become available (port 5432)

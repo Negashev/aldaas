@@ -101,22 +101,19 @@ while true; do
     SERVICE_READY=0
     for i in $(seq 1 120); do
         if [ "$ALDAAS_MODE" = "external" ]; then
-            # External mode: check Argo workflow status
-            # The workflow creates Deployment+Service+Ingress, then wait-service step
-            # checks PostgreSQL readiness. When wait-service completes, the workflow
-            # status shows "Succeeded" (all steps done) or "Running" (workflow alive).
-            # We check if the workflow is still alive (not Failed/Error) and
-            # the wait-service step has completed.
-            WF_STATUS=$(argo get "$aldaas_full" -o json 2>/dev/null | grep -o '"phase":"[^"]*"' | head -1 | cut -d'"' -f4)
-            if [ "$WF_STATUS" = "Succeeded" ] || [ "$WF_STATUS" = "Running" ]; then
-                # Check if wait-service step completed by looking at progress
-                WF_PROGRESS=$(argo get "$aldaas_full" -o json 2>/dev/null | grep -o '"progress":"[^"]*"' | head -1 | cut -d'"' -f4)
-                # Progress format: "N/M" where M is total steps
-                # If all steps complete, the DB is ready
+            # External mode: check Argo workflow status via text output
+            # (argo get -o json doesn't work through external gRPC proxy)
+            # We parse the text output for Status and Progress lines.
+            WF_OUTPUT=$(argo get "$aldaas_full" 2>/dev/null)
+            WF_STATUS=$(echo "$WF_OUTPUT" | grep '^Status:' | awk '{print $2}')
+            WF_PROGRESS=$(echo "$WF_OUTPUT" | grep '^Progress:' | awk '{print $2}')
+            # Status: Running = workflow alive, Succeeded = all steps done
+            # Progress: "N/M" — when N=M and N>0, all steps complete (DB ready)
+            if [ "$WF_STATUS" = "Running" ] || [ "$WF_STATUS" = "Succeeded" ]; then
                 if echo "$WF_PROGRESS" | grep -q '/'; then
                     DONE=$(echo "$WF_PROGRESS" | cut -d'/' -f1)
                     TOTAL=$(echo "$WF_PROGRESS" | cut -d'/' -f2)
-                    if [ "$DONE" = "$TOTAL" ] && [ "$DONE" -gt 0 ]; then
+                    if [ "$DONE" = "$TOTAL" ] && [ "$DONE" -gt 0 ] 2>/dev/null; then
                         echo "DB Service is ready (workflow progress $WF_PROGRESS, attempt $i)"
                         BACKOFF=1
                         SERVICE_READY=1

@@ -10,6 +10,8 @@ spec:
       name: s3-dep
       transform:
         jq: '{body: (.body | @base64d | fromjson | .Records[0].s3.object.key)}'
+      filter:
+        expression: 'body | @base64d | fromjson | .Records[0].s3.object.key | startswith("{{ .Values.s3.prefix }}")'
   template:
     serviceAccountName: {{ .Values.serviceAccountName }}
     container:

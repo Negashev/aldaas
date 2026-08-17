@@ -9,7 +9,14 @@ ALDAAS_NAMESPACE="${ALDAAS_NAMESPACE:-aldaas}"
 # Connection mode: "internal" (Service DNS, default) or "external" (ingress wss://)
 # - internal: ws://<wf-name>.<namespace>.svc.cluster.local:8080 (bypasses ALB 60s timeout)
 # - external: wss://<domain>/<aldaas-fullname>/<token>/<wf-name> (through ingress, for off-cluster clients)
+#   Requires: ALDAAS_DOMAIN (e.g. hr-backend.aldaas.dandelion-civilization.com)
+#   Backward compat: ALDAAS_SERVER or ALDAAS_HOST also accepted as ALDAAS_DOMAIN
 ALDAAS_MODE="${ALDAAS_MODE:-internal}"
+
+# External mode domain: accept ALDAAS_DOMAIN, ALDAAS_SERVER, or ALDAAS_HOST (priority order)
+if [ -z "$ALDAAS_DOMAIN" ]; then
+    ALDAAS_DOMAIN="${ALDAAS_SERVER:-${ALDAAS_HOST:-}}"
+fi
 
 # Exponential backoff for re-provisioning (seconds)
 BACKOFF=1
@@ -17,11 +24,11 @@ MAX_BACKOFF=30
 
 # Retry loop: re-provision on upstream DB loss
 # tcp-over-websocket does not exit on dial error (continue in Accept loop).
-# We run it in background and monitor upstream DNS with a watchdog.
-# When the upstream Service is deleted (DNS NXDOMAIN), we kill the tunnel
-# and re-submit a new Argo workflow.
+# We run it in background and monitor upstream with a watchdog.
+# When the upstream Service is deleted (DNS NXDOMAIN) or WebSocket dies,
+# we kill the tunnel and re-submit a new Argo workflow.
 while true; do
-    echo "=== Re-provisioning aldaas (backoff=${BACKOFF}s) ==="
+    echo "=== Re-provisioning aldaas (backoff=${BACKOFF}s, mode=${ALDAAS_MODE}) ==="
 
     # Session store: ConfigMap (K8s) or /tmp file (fallback)
     # ALDAAS_SESSION_ID makes ConfigMap unique per-deployment (e.g. 72536668-review-feature-hr-9oqso9)
@@ -84,21 +91,47 @@ while true; do
         fi
     fi
 
-    # Wait for the ephemeral DB Service to become available (port 5432)
-    # We poll the Service DNS instead of using `argo watch` because:
-    # 1. argo watch blocks until the ENTIRE workflow completes
-    # 2. We only need to wait until the Service is reachable (after wait-service step)
-    # 3. The workflow stays alive (no cleanup-pvc step) — lifecycle is managed by
-    #    uptime container → remove EventSource → delete workflow → OwnerReferences
-    #    cascade-delete PVC, Deployment, Service, Ingress
-    echo "Waiting for ephemeral DB Service $aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local:5432..."
+    # Wait for the ephemeral DB to become available
+    # - internal mode: poll Service DNS (nc -z <wf>.<ns>.svc.cluster.local:5432)
+    # - external mode: poll Argo workflow status (argo get <wf> | grep Succeeded/Running)
+    #   We can't use nc on internal DNS from outside the cluster.
+    #   Instead we wait for the workflow to reach "Running" with all steps complete
+    #   by checking argo get output for "Succeeded" or "Running" with progress complete.
+    echo "Waiting for ephemeral DB (mode=${ALDAAS_MODE})..."
     SERVICE_READY=0
     for i in $(seq 1 120); do
-        if nc -z "$aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local" 5432 2>/dev/null; then
-            echo "DB Service is ready (attempt $i)"
-            BACKOFF=1  # reset backoff on success
-            SERVICE_READY=1
-            break
+        if [ "$ALDAAS_MODE" = "external" ]; then
+            # External mode: check Argo workflow status
+            # The workflow creates Deployment+Service+Ingress, then wait-service step
+            # checks PostgreSQL readiness. When wait-service completes, the workflow
+            # status shows "Succeeded" (all steps done) or "Running" (workflow alive).
+            # We check if the workflow is still alive (not Failed/Error) and
+            # the wait-service step has completed.
+            WF_STATUS=$(argo get "$aldaas_full" -o json 2>/dev/null | grep -o '"phase":"[^"]*"' | head -1 | cut -d'"' -f4)
+            if [ "$WF_STATUS" = "Succeeded" ] || [ "$WF_STATUS" = "Running" ]; then
+                # Check if wait-service step completed by looking at progress
+                WF_PROGRESS=$(argo get "$aldaas_full" -o json 2>/dev/null | grep -o '"progress":"[^"]*"' | head -1 | cut -d'"' -f4)
+                # Progress format: "N/M" where M is total steps
+                # If all steps complete, the DB is ready
+                if echo "$WF_PROGRESS" | grep -q '/'; then
+                    DONE=$(echo "$WF_PROGRESS" | cut -d'/' -f1)
+                    TOTAL=$(echo "$WF_PROGRESS" | cut -d'/' -f2)
+                    if [ "$DONE" = "$TOTAL" ] && [ "$DONE" -gt 0 ]; then
+                        echo "DB Service is ready (workflow progress $WF_PROGRESS, attempt $i)"
+                        BACKOFF=1
+                        SERVICE_READY=1
+                        break
+                    fi
+                fi
+            fi
+        else
+            # Internal mode: poll Service DNS directly
+            if nc -z "$aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local" 5432 2>/dev/null; then
+                echo "DB Service is ready (attempt $i)"
+                BACKOFF=1  # reset backoff on success
+                SERVICE_READY=1
+                break
+            fi
         fi
         sleep 1
     done
@@ -116,9 +149,18 @@ while true; do
     if [ "$ALDAAS_MODE" = "external" ]; then
         # External mode: through ingress (wss://)
         # URL: wss://<domain>/<aldaas-fullname>/<token>/<wf-name>
-        # Requires: ALDAAS_DOMAIN, ALDAAS_TOKEN env vars
+        # Requires: ALDAAS_DOMAIN (or ALDAAS_SERVER/ALDAAS_HOST as fallback), ALDAAS_TOKEN env vars
+        if [ -z "$ALDAAS_DOMAIN" ]; then
+            echo "ERROR: ALDAAS_MODE=external but ALDAAS_DOMAIN is not set"
+            echo "Set ALDAAS_DOMAIN (or ALDAAS_SERVER or ALDAAS_HOST) to the ingress hostname"
+            echo "Example: ALDAAS_DOMAIN=hr-backend.aldaas.dandelion-civilization.com"
+            sleep $BACKOFF
+            BACKOFF=$((BACKOFF * 2))
+            [ $BACKOFF -gt $MAX_BACKOFF ] && BACKOFF=$MAX_BACKOFF
+            continue
+        fi
         WS_URL="wss://${ALDAAS_DOMAIN}/${ALDAAS_NAME}/${ALDAAS_TOKEN}/${aldaas_name}"
-        echo "Connecting (external/ingress): $WS_URL"
+        echo "Connecting (external/ingress): wss://${ALDAAS_DOMAIN}/${ALDAAS_NAME}/<token>/${aldaas_name}"
     else
         # Internal mode: direct Service DNS (ws://) — bypasses ALB 60s idle timeout
         # Service: <workflow-name>.<namespace>.svc.cluster.local:8080 (tunnel port)
@@ -128,31 +170,44 @@ while true; do
 
     # Start tcp-over-websocket in background
     # tcp-over-websocket does not exit on dial error (continue in Accept loop).
-    # We monitor upstream DNS with a watchdog and kill the tunnel when the
-    # Service is deleted (DNS NXDOMAIN).
+    # We monitor upstream with a watchdog and kill the tunnel when the
+    # upstream is deleted.
     tcp-over-websocket client -listen_tcp 0.0.0.0:$ALDAAS_PORT -connect_ws "$WS_URL" &
     TUNNEL_PID=$!
 
-    # Watchdog: monitor upstream Service DNS
+    # Watchdog: monitor upstream availability
+    # - internal mode: check Service DNS (nslookup <wf>.<ns>.svc.cluster.local)
+    # - external mode: check Argo workflow status (argo get <wf>)
     # When the Argo workflow is deleted (TTL expiry / remove EventSource),
-    # the Service DNS record is removed. We detect this and trigger re-provisioning.
-    # Tolerance: require N consecutive DNS failures before killing the tunnel,
-    # to avoid false positives from transient CoreDNS hiccups or network blips.
-    DNS_FAIL_COUNT=0
-    DNS_FAIL_THRESHOLD=3
+    # the upstream is removed. We detect this and trigger re-provisioning.
+    # Tolerance: require N consecutive failures before killing the tunnel,
+    # to avoid false positives from transient hiccups.
+    FAIL_COUNT=0
+    FAIL_THRESHOLD=3
     while kill -0 $TUNNEL_PID 2>/dev/null; do
         sleep 10
-        if ! nslookup "$aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local" >/dev/null 2>&1; then
-            DNS_FAIL_COUNT=$((DNS_FAIL_COUNT + 1))
-            echo "DNS lookup failed ($DNS_FAIL_COUNT/$DNS_FAIL_THRESHOLD) for $aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local"
-            if [ "$DNS_FAIL_COUNT" -ge "$DNS_FAIL_THRESHOLD" ]; then
-                echo "Upstream Service DNS gone after $DNS_FAIL_THRESHOLD consecutive failures — re-provisioning"
-                kill $TUNNEL_PID 2>/dev/null
-                wait $TUNNEL_PID 2>/dev/null
-                break
+        if [ "$ALDAAS_MODE" = "external" ]; then
+            # External mode: check if Argo workflow still exists
+            if ! argo get "$aldaas_full" >/dev/null 2>&1; then
+                FAIL_COUNT=$((FAIL_COUNT + 1))
+                echo "Argo workflow gone ($FAIL_COUNT/$FAIL_THRESHOLD) for $aldaas_full"
+            else
+                FAIL_COUNT=0
             fi
         else
-            DNS_FAIL_COUNT=0
+            # Internal mode: check Service DNS
+            if ! nslookup "$aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local" >/dev/null 2>&1; then
+                FAIL_COUNT=$((FAIL_COUNT + 1))
+                echo "DNS lookup failed ($FAIL_COUNT/$FAIL_THRESHOLD) for $aldaas_name.$ALDAAS_NAMESPACE.svc.cluster.local"
+            else
+                FAIL_COUNT=0
+            fi
+        fi
+        if [ "$FAIL_COUNT" -ge "$FAIL_THRESHOLD" ]; then
+            echo "Upstream gone after $FAIL_THRESHOLD consecutive failures — re-provisioning"
+            kill $TUNNEL_PID 2>/dev/null
+            wait $TUNNEL_PID 2>/dev/null
+            break
         fi
     done
 

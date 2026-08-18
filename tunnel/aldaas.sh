@@ -44,8 +44,15 @@ while true; do
         if [ -n "$aldaas_full" ]; then
             echo "ConfigMap $SESSION_CM has saved workflow: $aldaas_full"
             if argo get "$aldaas_full" >/dev/null 2>&1; then
-                aldaas_name=$(echo "$aldaas_full" | sed 's|^.*/||')
-                echo "Use saved $aldaas_full"
+                # Check workflow phase — don't reuse failed/error workflows
+                WF_PHASE=$(argo get "$aldaas_full" -o jsonpath='{.status.phase}' 2>/dev/null)
+                if [ -n "$WF_PHASE" ] && [ "$WF_PHASE" != "Running" ] && [ "$WF_PHASE" != "Succeeded" ]; then
+                    echo "Saved workflow is $WF_PHASE, will re-provision"
+                    aldaas_full=""
+                else
+                    aldaas_name=$(echo "$aldaas_full" | sed 's|^.*/||')
+                    echo "Use saved $aldaas_full (phase=$WF_PHASE)"
+                fi
             else
                 echo "Saved workflow not found, will re-provision"
                 aldaas_full=""
@@ -59,8 +66,15 @@ while true; do
             echo "save file exists."
             aldaas_full=$(cat $FILE)
             if argo get "$aldaas_full" >/dev/null 2>&1; then
-                aldaas_name=$(echo "$aldaas_full" | sed 's|^.*/||')
-                echo "Use saved $aldaas_full"
+                # Check workflow phase — don't reuse failed/error workflows
+                WF_PHASE=$(argo get "$aldaas_full" -o jsonpath='{.status.phase}' 2>/dev/null)
+                if [ -n "$WF_PHASE" ] && [ "$WF_PHASE" != "Running" ] && [ "$WF_PHASE" != "Succeeded" ]; then
+                    echo "Saved workflow is $WF_PHASE, will re-provision"
+                    aldaas_full=""
+                else
+                    aldaas_name=$(echo "$aldaas_full" | sed 's|^.*/||')
+                    echo "Use saved $aldaas_full (phase=$WF_PHASE)"
+                fi
             else
                 echo "Not found $aldaas_full"
                 aldaas_full=""
